@@ -139,6 +139,7 @@ export default function PredictionCard({
   saving,
   onPredict,
   animationDelay = 0,
+  roomPredictions = {},
 }) {
   const fixtureId = fixture?.fixture?.id;
   const home = fixture?.teams?.home;
@@ -146,6 +147,32 @@ export default function PredictionCard({
   const status = getMatchStatus(fixture);
   const locked = isLocked(fixture);
   const goals = getGoals(fixture);
+
+  // Calculate community vote split
+  const allPredictionsForFixture = Object.entries(roomPredictions)
+    .map(([, pred]) => pred)
+    .filter(
+      (pred) =>
+        pred?.fixtureId === fixtureId ||
+        (typeof pred?.fixtureId === "number" &&
+          typeof fixtureId === "number" &&
+          pred.fixtureId === fixtureId) ||
+        (typeof pred?.fixtureId === "string" &&
+          typeof fixtureId === "string" &&
+          pred.fixtureId === fixtureId)
+    );
+
+  const homeVotes = allPredictionsForFixture.filter(
+    (pred) => pred?.winner === "home"
+  ).length;
+
+  const awayVotes = allPredictionsForFixture.filter(
+    (pred) => pred?.winner === "away"
+  ).length;
+
+  const totalVotes = homeVotes + awayVotes;
+  const homePercent = totalVotes > 0 ? (homeVotes / totalVotes) * 100 : 0;
+  const awayPercent = totalVotes > 0 ? (awayVotes / totalVotes) * 100 : 0;
 
   const [selectedWinner, setSelectedWinner] = useState(null);
   const [homeGoals, setHomeGoals] = useState(0);
@@ -390,6 +417,49 @@ export default function PredictionCard({
           </button>
         )}
       </div>
+
+      {/* Community Support Bar */}
+      {totalVotes > 0 && (
+        <div className="pred-support-section">
+          <div className="pred-support-label">
+            Community <span className="pred-support-count">({totalVotes})</span>
+          </div>
+          <div className="pred-support-bar">
+            <div
+              className="pred-support-segment pred-support-segment--home"
+              style={{ width: `${homePercent}%` }}
+              title={`${homePercent.toFixed(0)}% supporting ${home?.name}`}
+            >
+              {homePercent > 15 && (
+                <span className="pred-support-text">
+                  {homePercent.toFixed(0)}%
+                </span>
+              )}
+            </div>
+            <div
+              className="pred-support-segment pred-support-segment--away"
+              style={{ width: `${awayPercent}%` }}
+              title={`${awayPercent.toFixed(0)}% supporting ${away?.name}`}
+            >
+              {awayPercent > 15 && (
+                <span className="pred-support-text">
+                  {awayPercent.toFixed(0)}%
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="pred-support-legend">
+            <span className="pred-support-legend-item">
+              <span className="pred-support-dot pred-support-dot--home"></span>
+              {home?.name}
+            </span>
+            <span className="pred-support-legend-item">
+              <span className="pred-support-dot pred-support-dot--away"></span>
+              {away?.name}
+            </span>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

@@ -213,6 +213,7 @@ const handlePredict = useCallback(
                       saving={saving[fixture.fixture.id]}
                       onPredict={handlePredict}
                       animationDelay={i * 60}
+                      roomPredictions={predictions}
                     />
                   ))}
                 </div>
