@@ -150,17 +150,8 @@ export default function PredictionCard({
 
   // Calculate community vote split
   const allPredictionsForFixture = Object.entries(roomPredictions)
-    .map(([, pred]) => pred)
-    .filter(
-      (pred) =>
-        pred?.fixtureId === fixtureId ||
-        (typeof pred?.fixtureId === "number" &&
-          typeof fixtureId === "number" &&
-          pred.fixtureId === fixtureId) ||
-        (typeof pred?.fixtureId === "string" &&
-          typeof fixtureId === "string" &&
-          pred.fixtureId === fixtureId)
-    );
+    .filter(([key]) => String(key) === String(fixtureId))
+    .map(([, pred]) => pred);
 
   const homeVotes = allPredictionsForFixture.filter(
     (pred) => pred?.winner === "home"
