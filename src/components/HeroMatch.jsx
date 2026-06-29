@@ -3,15 +3,6 @@ import "./HeroMatch.css";
 
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"];
 
-function formatUpdatedAt(updatedAt) {
-  if (!updatedAt) return null;
-
-  return new Date(updatedAt).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function getStatusInfo(fixture) {
   const short = fixture?.fixture?.status?.short;
   const elapsed = fixture?.fixture?.status?.elapsed;
@@ -22,7 +13,7 @@ function getStatusInfo(fixture) {
     if (short === "ET") return { label: `${elapsed ?? ""}' ET`, isLive: true };
     if (short === "P") return { label: "Penalties", isLive: true };
     return {
-      label: elapsed ? `${elapsed}'` : updatedAt ? `Live now - updated ${updatedAt}` : "Live now",
+      label: elapsed ? `${elapsed}'` : "Live now",
       isLive: true,
     };
   }
