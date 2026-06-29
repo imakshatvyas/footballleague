@@ -32,9 +32,10 @@ export default function RoomPage() {
   useEffect(() => {
     if (!roomId || !user) return;
     let cancelled = false;
+    let firstLoad = true;
 
     const load = async () => {
-      setLoading(true);
+      if (firstLoad) setLoading(true);
       try {
         const [roomData, fixtureData, predData, lbData, memberData] = await Promise.all([
           getRoom(roomId),
@@ -89,12 +90,19 @@ export default function RoomPage() {
         setNextMatch(next || null);
         setFixtures(activeFixtures);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          firstLoad = false;
+        }
       }
     };
 
     load();
-    return () => { cancelled = true; };
+    const refreshId = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(refreshId);
+    };
   }, [roomId, user]);
 
   // ── Predict ─────────────────────────────────────────

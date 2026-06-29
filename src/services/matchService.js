@@ -35,6 +35,7 @@ function normalize(match) {
       status: {
         short: statusMap(match.status),
         long: match.status,
+        updatedAt: match.lastUpdated,
       },
     },
 

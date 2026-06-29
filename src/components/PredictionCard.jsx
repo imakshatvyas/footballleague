@@ -24,18 +24,34 @@ function formatKickoff(dateStr) {
   })} - ${time}`;
 }
 
+function formatUpdatedAt(updatedAt) {
+  if (!updatedAt) return null;
+
+  return new Date(updatedAt).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getMatchStatus(fixture) {
   const short = fixture?.fixture?.status?.short;
   const elapsed = fixture?.fixture?.status?.elapsed;
   const isLive = LIVE_STATUSES.includes(short);
   const isFinished = short === "FT";
   const isUpcoming = short === "NS";
+  const updatedAt = formatUpdatedAt(fixture?.fixture?.status?.updatedAt);
 
   if (isLive) {
     if (short === "HT") return { short, isLive, isFinished, isUpcoming, label: "Half time" };
     if (short === "ET") return { short, isLive, isFinished, isUpcoming, label: `${elapsed ?? ""}' ET` };
     if (short === "P") return { short, isLive, isFinished, isUpcoming, label: "Penalties" };
-    return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${elapsed}'` : "Live now" };
+    return {
+      short,
+      isLive,
+      isFinished,
+      isUpcoming,
+      label: elapsed ? `${elapsed}'` : updatedAt ? `Live now - updated ${updatedAt}` : "Live now",
+    };
   }
 
   if (isFinished) return { short, isLive, isFinished, isUpcoming, label: "Finished" };
