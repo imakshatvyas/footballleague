@@ -51,7 +51,13 @@ export default function RoomPage() {
         setMembers(memberData || []);
 
         const predMap = {};
-        (predData || []).forEach(p => { predMap[p.fixtureId] = p.prediction; });
+        (predData || []).forEach((p) => {
+          predMap[p.fixtureId] = {
+            winner: p.prediction,
+            homeGoals: p.predictedHomeGoals ?? 0,
+            awayGoals: p.predictedAwayGoals ?? 0,
+          };
+        });
         setPredictions(predMap);
 
         const upcoming = (fixtureData || []).filter(f => f.fixture?.status?.short !== 'FT');
@@ -71,15 +77,45 @@ export default function RoomPage() {
   }, [roomId, user]);
 
   // ── Predict ─────────────────────────────────────────
-  const handlePredict = useCallback(async (fixtureId, outcome) => {
-    setSaving(s => ({ ...s, [fixtureId]: true }));
+const handlePredict = useCallback(
+  async (
+    fixtureId,
+    outcome,
+    predictedHomeGoals,
+    predictedAwayGoals
+  ) => {
+    setSaving((s) => ({
+      ...s,
+      [fixtureId]: true,
+    }));
+
     try {
-      await savePrediction(user.uid, roomId, fixtureId, outcome);
-      setPredictions(p => ({ ...p, [fixtureId]: outcome }));
+      await savePrediction(
+        user.uid,
+        roomId,
+        fixtureId,
+        outcome,
+        predictedHomeGoals,
+        predictedAwayGoals
+      );
+
+      setPredictions((p) => ({
+        ...p,
+        [fixtureId]: {
+          winner: outcome,
+          homeGoals: predictedHomeGoals,
+          awayGoals: predictedAwayGoals,
+        },
+      }));
     } finally {
-      setSaving(s => ({ ...s, [fixtureId]: false }));
+      setSaving((s) => ({
+        ...s,
+        [fixtureId]: false,
+      }));
     }
-  }, [user, roomId]);
+  },
+  [user, roomId]
+);
 
   // ── Hero fixture = live first, then next upcoming ──
   const heroFixture = liveMatch || nextMatch;
@@ -288,12 +324,34 @@ function RecentResults({ roomId, currentUserId, predictions }) {
         const outcome    = homeGoals > awayGoals ? 'home' : 'away';
         const homeName   = fixture.teams?.home?.name;
         const awayName   = fixture.teams?.away?.name;
-        const myPred     = predictions[fid];
-        const hasVoted   = myPred === 'home' || myPred === 'away';
-        const correct    = hasVoted && myPred === outcome;
+        const myPred = predictions[fid];
+        const hasVoted =
+          myPred?.winner === 'home' ||
+          myPred?.winner === 'away';
+
+        const winnerCorrect =
+          hasVoted &&
+          myPred?.winner === outcome;
+
+        const scoreCorrect =
+          winnerCorrect &&
+          myPred?.homeGoals === homeGoals &&
+          myPred?.awayGoals === awayGoals;
+
+        const earnedPoints =
+          winnerCorrect
+            ? scoreCorrect
+              ? 1.5
+              : 1
+            : 0;
 
         let statusClass = 'result-card--novote';
-        if (hasVoted) statusClass = correct ? 'result-card--correct' : 'result-card--wrong';
+
+        if (hasVoted) {
+          statusClass = winnerCorrect
+            ? 'result-card--correct'
+            : 'result-card--wrong';
+        }
 
         return (
           <div key={fid} className={`result-card ${statusClass}`}>
@@ -307,7 +365,7 @@ function RecentResults({ roomId, currentUserId, predictions }) {
             <div className="result-vote">
               {hasVoted ? (
                 <span className="result-vote-label">
-                  You voted: {myPred === 'home' ? homeName : awayName}
+                  You voted: {myPred?.winner === 'home' ? homeName : awayName}
                 </span>
               ) : (
                 <span className="result-vote-label result-vote-label--none">
@@ -316,28 +374,65 @@ function RecentResults({ roomId, currentUserId, predictions }) {
               )}
             </div>
 
-            <div className="result-footer">
-              {hasVoted ? (
-                correct ? (
-                  <span className="result-badge result-badge--correct">
-                    ✅ Correct <span className="result-badge-points">+1 Point</span>
-                  </span>
-                ) : (
-                  <span className="result-badge result-badge--wrong">
-                    ❌ Wrong <span className="result-badge-points">0 Points</span>
-                  </span>
-                )
-              ) : (
-                <span className="result-badge result-badge--none">
-                  ⚪ Not Voted
-                </span>
-              )}
-              <span className="result-date">
-                {fixture.fixture?.date
-                  ? new Date(fixture.fixture.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                  : ''}
-              </span>
-            </div>
+            {hasVoted && (
+              <div className="result-predicted-score">
+                Predicted Score: {myPred?.homeGoals} – {myPred?.awayGoals}
+              </div>
+            )}
+
+           <div className="result-footer">
+
+  {!hasVoted ? (
+
+    <span className="result-badge result-badge--none">
+      ⚪ Not Voted
+    </span>
+
+  ) : winnerCorrect ? (
+
+    <span className="result-badge result-badge--correct">
+
+      ✅ Winner Correct
+
+      {scoreCorrect && (
+        <div className="result-score-bonus">
+          🎯 Exact Score Bonus
+        </div>
+      )}
+
+      <span className="result-badge-points">
+        +{earnedPoints} Points
+      </span>
+
+    </span>
+
+  ) : (
+
+    <span className="result-badge result-badge--wrong">
+
+      ❌ Wrong
+
+      <span className="result-badge-points">
+        0 Points
+      </span>
+
+    </span>
+
+  )}
+
+  <span className="result-date">
+    {fixture.fixture?.date
+      ? new Date(fixture.fixture.date).toLocaleDateString(
+          "en-GB",
+          {
+            day: "numeric",
+            month: "short",
+          }
+        )
+      : ""}
+  </span>
+
+</div>
           </div>
         );
       })}
