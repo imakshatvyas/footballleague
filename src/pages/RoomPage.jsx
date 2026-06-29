@@ -66,6 +66,15 @@ export default function RoomPage() {
         const matches = (fixtureData || []).slice().sort(
           (a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date)
         );
+        console.table(
+  matches.map((m) => ({
+    home: m.teams.home.name,
+    away: m.teams.away.name,
+    status: m.fixture.status.short,
+    date: m.fixture.date,
+    updated: m.fixture.status.updatedAt,
+  }))
+);
         const liveStatuses = ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE'];
         const liveMatches = matches.filter(f => liveStatuses.includes(f.fixture?.status?.short));
         const live = liveMatches[0] || null;
