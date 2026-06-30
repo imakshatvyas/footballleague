@@ -14,6 +14,11 @@ const api = axios.create({
     : "/api",
 });
 
+const getTeamLogoUrl = (imageId) => {
+  if (!imageId) return null;
+  return `https://static.cricbuzz.com/a/img/v1/72x54/i1/c${imageId}/team.jpg`;
+};
+
 function getCricketScores(match) {
   let homeRuns = null;
   let awayRuns = null;
@@ -22,43 +27,49 @@ function getCricketScores(match) {
   let homeOvers = null;
   let awayOvers = null;
 
-  if (Array.isArray(match.score)) {
-    const team1 = match.teams?.[0]?.toLowerCase();
-    const team2 = match.teams?.[1]?.toLowerCase();
+  const scoreInfo = match.matchScore || match.scorecard || {};
+  const team1Score = scoreInfo.team1Score || {};
+  const team2Score = scoreInfo.team2Score || {};
 
-    match.score.forEach(inn => {
-      const inningName = inn.inning?.toLowerCase() || '';
-      if (team1 && inningName.includes(team1)) {
-        homeRuns = inn.r;
-        homeWickets = inn.w;
-        homeOvers = inn.o;
-      } else if (team2 && inningName.includes(team2)) {
-        awayRuns = inn.r;
-        awayWickets = inn.w;
-        awayOvers = inn.o;
-      }
-    });
+  const t1Inn1 = team1Score.inngs1 || {};
+  const t2Inn1 = team2Score.inngs1 || {};
 
-    // Fallback if inning names are generic or didn't match team names
-    if (homeRuns === null && match.score.length > 0) {
-      homeRuns = match.score[0].r;
-      homeWickets = match.score[0].w;
-      homeOvers = match.score[0].o;
-      if (match.score.length > 1) {
-        awayRuns = match.score[1].r;
-        awayWickets = match.score[1].w;
-        awayOvers = match.score[1].o;
-      }
-    }
+  if (t1Inn1.runs !== undefined) {
+    homeRuns = t1Inn1.runs;
+    homeWickets = t1Inn1.wickets ?? 0;
+    homeOvers = t1Inn1.overs;
+  }
+  if (t2Inn1.runs !== undefined) {
+    awayRuns = t2Inn1.runs;
+    awayWickets = t2Inn1.wickets ?? 0;
+    awayOvers = t2Inn1.overs;
+  }
+
+  const t1Inn2 = team1Score.inngs2;
+  const t2Inn2 = team2Score.inngs2;
+  if (t1Inn2 && t1Inn2.runs !== undefined) {
+    homeRuns = t1Inn2.runs;
+    homeWickets = t1Inn2.wickets ?? 0;
+    homeOvers = t1Inn2.overs;
+  }
+  if (t2Inn2 && t2Inn2.runs !== undefined) {
+    awayRuns = t2Inn2.runs;
+    awayWickets = t2Inn2.wickets ?? 0;
+    awayOvers = t2Inn2.overs;
   }
 
   return { homeRuns, awayRuns, homeWickets, awayWickets, homeOvers, awayOvers };
 }
 
 export function getCricketWinner(match) {
-  const status = match.status?.toLowerCase() || '';
-  const team1 = match.teams?.[0]?.toLowerCase();
-  const team2 = match.teams?.[1]?.toLowerCase();
+  if (match?.fixture && match.fixture.hasOwnProperty('winner')) {
+    return match.fixture.winner;
+  }
+
+  const matchInfo = match?.matchInfo || match || {};
+  const status = (matchInfo.status || match?.status || "").toLowerCase();
+  const team1 = (matchInfo.team1?.teamName || match?.team1?.teamName || "").toLowerCase();
+  const team2 = (matchInfo.team2?.teamName || match?.team2?.teamName || "").toLowerCase();
 
   if (team1 && status.includes(team1)) return 'home';
   if (team2 && status.includes(team2)) return 'away';
@@ -75,8 +86,21 @@ export function getCricketWinner(match) {
 }
 
 function normalize(match) {
+  const matchInfo = match.matchInfo || match;
+  const matchId = matchInfo.matchId || match.matchId;
+  const seriesId = matchInfo.seriesId || match.seriesId || "intl";
+  const seriesName = matchInfo.seriesName || match.seriesName || "Cricket Series";
+
+  const team1 = matchInfo.team1 || {};
+  const team2 = matchInfo.team2 || {};
+
+  const team1Name = team1.teamName || "Team A";
+  const team2Name = team2.teamName || "Team B";
+
+  const team1Logo = getTeamLogoUrl(team1.imageId);
+  const team2Logo = getTeamLogoUrl(team2.imageId);
+
   const scores = getCricketScores(match);
-  const winner = getCricketWinner(match);
   
   // Format score strings for Cricket
   let homeScoreStr = "";
@@ -93,38 +117,55 @@ function normalize(match) {
     if (scores.awayOvers !== null) awayScoreStr += ` (${scores.awayOvers} ov)`;
   }
 
-  const team1Info = match.teamInfo?.find(t => t.name === match.teams?.[0]) || match.teamInfo?.[0];
-  const team2Info = match.teamInfo?.find(t => t.name === match.teams?.[1]) || match.teamInfo?.[1];
+  const statusText = matchInfo.status || match.status || "";
+  const winner = getCricketWinner(match);
 
-  const nameParts = match.name ? match.name.split(',') : [];
-  const seriesName = nameParts.length > 2 ? nameParts.slice(2).join(',').trim() : "Cricket Match";
+  // Determine short status
+  let shortStatus = "NS";
+  const state = (matchInfo.state || match.state || "").toLowerCase();
+  
+  if (
+    state === "complete" ||
+    statusText.toLowerCase().includes("won by") ||
+    statusText.toLowerCase().includes("won the match") ||
+    statusText.toLowerCase().includes("draw") ||
+    statusText.toLowerCase().includes("tied") ||
+    statusText.toLowerCase().includes("abandoned") ||
+    statusText.toLowerCase().includes("no result")
+  ) {
+    shortStatus = "FT";
+  } else if (state === "live" || state === "in progress" || state === "inprogress") {
+    shortStatus = "LIVE";
+  }
 
-  const normalized = {
+  const kickoffTime = matchInfo.startDate ? new Date(Number(matchInfo.startDate)) : new Date();
+
+  return {
     fixture: {
-      id: match.id,
-      date: match.dateTimeGMT ? `${match.dateTimeGMT}Z` : new Date(match.date).toISOString(),
+      id: matchId,
+      date: kickoffTime.toISOString(),
       winner: winner,
       status: {
-        short: match.matchEnded ? "FT" : match.matchStarted ? "LIVE" : "NS",
-        long: match.status || "Scheduled",
+        short: shortStatus,
+        long: statusText || "Scheduled",
         updatedAt: new Date().toISOString(),
       },
     },
     league: {
-      id: match.series_id || "intl",
+      id: seriesId,
       name: seriesName,
       logo: null,
     },
     teams: {
       home: {
-        id: team1Info?.shortname || match.teams?.[0],
-        name: match.teams?.[0] || "Team A",
-        logo: team1Info?.img || null,
+        id: team1.teamId || "home",
+        name: team1Name,
+        logo: team1Logo,
       },
       away: {
-        id: team2Info?.shortname || match.teams?.[1],
-        name: match.teams?.[1] || "Team B",
-        logo: team2Info?.img || null,
+        id: team2.teamId || "away",
+        name: team2Name,
+        logo: team2Logo,
       },
     },
     goals: {
@@ -141,29 +182,28 @@ function normalize(match) {
     scoreDisplay: {
       homeScore: homeScoreStr,
       awayScore: awayScoreStr,
-      statusLabel: match.status || ""
+      statusLabel: statusText || ""
     },
     raw: match,
   };
-
-  return normalized;
 }
 
 function isMatchRelevant(match) {
-  const name = (match.name || "").toLowerCase();
-  const teams = (match.teams || []).map(t => t.toLowerCase());
+  const matchInfo = match.matchInfo || match;
+  const name = (matchInfo.seriesName || match.seriesName || "").toLowerCase();
+  const team1 = (matchInfo.team1?.teamName || "").toLowerCase();
+  const team2 = (matchInfo.team2?.teamName || "").toLowerCase();
 
-  // Only men's matches (exclude women's)
   const isWomen = name.includes("women") || name.includes("womens") || name.includes("women's") ||
-                  teams.some(t => t.includes("women") || t.includes("womens") || t.includes("women's"));
+                  team1.includes("women") || team2.includes("women");
 
   if (isWomen) return false;
 
-  // Check if India is related
-  const isIndiaRelated = teams.some(t => t === "india" || t.includes("india ") || t.includes(" india") || t.startsWith("india")) || name.includes("india");
-  // Check IPL
+  const isIndiaRelated = team1 === "india" || team1.includes("india ") || team1.includes(" india") || team1.startsWith("india") ||
+                         team2 === "india" || team2.includes("india ") || team2.includes(" india") || team2.startsWith("india") ||
+                         name.includes("india");
+
   const isIpl = name.includes("ipl") || name.includes("indian premier league");
-  // Check World Cup
   const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup");
 
   return isIndiaRelated || isIpl || isWorldCup;
@@ -171,19 +211,56 @@ function isMatchRelevant(match) {
 
 async function fetchMatches() {
   try {
-    const res = await api.get("/getFixtures?sport=cricket");
-    const rawMatches = res.data.data || [];
+    const [scheduleRes, liveRes, recentRes] = await Promise.all([
+      api.get("/getFixtures?sport=cricket&endpoint=schedule"),
+      api.get("/getFixtures?sport=cricket&endpoint=live"),
+      api.get("/getFixtures?sport=cricket&endpoint=recent")
+    ]);
+
+    const schedules = scheduleRes.data?.response?.schedules || [];
+    const scheduleMatches = [];
+    schedules.forEach(schedule => {
+      const matchScheduleList = schedule.scheduleAdWrapper?.matchScheduleList || [];
+      matchScheduleList.forEach(series => {
+        const seriesName = series.seriesName;
+        const seriesId = series.seriesId;
+        const matchInfoList = series.matchInfo || [];
+        
+        matchInfoList.forEach(match => {
+          scheduleMatches.push({
+            ...match,
+            seriesName,
+            seriesId
+          });
+        });
+      });
+    });
+
+    const liveMatches = liveRes.data?.response || [];
+    const recentMatches = recentRes.data?.response || [];
+
+    const allRawMatches = [...scheduleMatches, ...liveMatches, ...recentMatches];
+
+    const uniqueRawMatches = [];
+    const seenIds = new Set();
+    allRawMatches.forEach(match => {
+      const matchInfo = match.matchInfo || match;
+      const matchId = matchInfo.matchId || match.matchId;
+      if (matchId && !seenIds.has(String(matchId))) {
+        seenIds.add(String(matchId));
+        uniqueRawMatches.push(match);
+      }
+    });
 
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneWeekHence = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const filtered = rawMatches.filter((match) => {
-      // 1. Filter by relevance (India, IPL, World Cup Men's)
+    const filtered = uniqueRawMatches.filter((match) => {
       if (!isMatchRelevant(match)) return false;
 
-      // 2. Filter by date window (1 week from now, i.e., within 1 week of current date)
-      const matchDate = match.dateTimeGMT ? new Date(`${match.dateTimeGMT}Z`) : new Date(match.date);
+      const matchInfo = match.matchInfo || match;
+      const matchDate = matchInfo.startDate ? new Date(Number(matchInfo.startDate)) : new Date();
       if (isNaN(matchDate.getTime())) return false;
 
       return matchDate >= oneWeekAgo && matchDate <= oneWeekHence;
@@ -199,7 +276,7 @@ async function fetchMatches() {
 export async function getFixtures() {
   const fixtures = await fetchMatches();
   const now = new Date();
-  const cutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days window for upcoming cricket
+  const cutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   return fixtures
     .filter((match) => {
