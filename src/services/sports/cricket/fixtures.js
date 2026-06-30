@@ -149,10 +149,47 @@ function normalize(match) {
   return normalized;
 }
 
+function isMatchRelevant(match) {
+  const name = (match.name || "").toLowerCase();
+  const teams = (match.teams || []).map(t => t.toLowerCase());
+
+  // Only men's matches (exclude women's)
+  const isWomen = name.includes("women") || name.includes("womens") || name.includes("women's") ||
+                  teams.some(t => t.includes("women") || t.includes("womens") || t.includes("women's"));
+
+  if (isWomen) return false;
+
+  // Check if India is related
+  const isIndiaRelated = teams.some(t => t === "india" || t.includes("india ") || t.includes(" india") || t.startsWith("india")) || name.includes("india");
+  // Check IPL
+  const isIpl = name.includes("ipl") || name.includes("indian premier league");
+  // Check World Cup
+  const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup");
+
+  return isIndiaRelated || isIpl || isWorldCup;
+}
+
 async function fetchMatches() {
   try {
     const res = await api.get("/getFixtures?sport=cricket");
-    return (res.data.data || []).map(normalize);
+    const rawMatches = res.data.data || [];
+
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneWeekHence = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const filtered = rawMatches.filter((match) => {
+      // 1. Filter by relevance (India, IPL, World Cup Men's)
+      if (!isMatchRelevant(match)) return false;
+
+      // 2. Filter by date window (1 week from now, i.e., within 1 week of current date)
+      const matchDate = match.dateTimeGMT ? new Date(`${match.dateTimeGMT}Z`) : new Date(match.date);
+      if (isNaN(matchDate.getTime())) return false;
+
+      return matchDate >= oneWeekAgo && matchDate <= oneWeekHence;
+    });
+
+    return filtered.map(normalize);
   } catch (error) {
     console.error("Cricket FixturesService:", error);
     throw error;
