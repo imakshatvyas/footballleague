@@ -76,8 +76,18 @@ const toNumber = (value) => {
 const getFixtureId = (match) => String(match?.fixture?.id ?? match?.id ?? '');
 
 const getActualScore = (match) => {
-  const homeGoals = toNumber(match?.goals?.home ?? match?.score?.fullTime?.home);
-  const awayGoals = toNumber(match?.goals?.away ?? match?.score?.fullTime?.away);
+  const homeGoals = toNumber(
+    match?.displayScore?.fullTime?.home ??
+    match?.score?.regularTime?.home ??
+    match?.goals?.home ??
+    match?.score?.fullTime?.home
+  );
+  const awayGoals = toNumber(
+    match?.displayScore?.fullTime?.away ??
+    match?.score?.regularTime?.away ??
+    match?.goals?.away ??
+    match?.score?.fullTime?.away
+  );
 
   if (homeGoals === null || awayGoals === null) return null;
 

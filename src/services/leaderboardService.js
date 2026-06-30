@@ -17,6 +17,8 @@ const getFixtureId = (match) =>
 
 const getFinishedScore = (match) => {
   const homeGoals =
+    match?.displayScore?.fullTime?.home ??
+    match?.score?.regularTime?.home ??
     match?.goals?.home ??
     match?.homeGoals ??
     match?.score?.fullTime?.home ??
@@ -24,6 +26,8 @@ const getFinishedScore = (match) => {
     match?.score?.home;
 
   const awayGoals =
+    match?.displayScore?.fullTime?.away ??
+    match?.score?.regularTime?.away ??
     match?.goals?.away ??
     match?.awayGoals ??
     match?.score?.fullTime?.away ??

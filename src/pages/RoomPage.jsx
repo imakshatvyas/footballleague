@@ -431,6 +431,56 @@ function FullLeaderboard({ entries, currentUserId }) {
   );
 }
 
+const toScoreNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const hasScore = (score) =>
+  score &&
+  toScoreNumber(score.home) !== null &&
+  toScoreNumber(score.away) !== null;
+
+const getFixtureScoreBreakdown = (fixture) => {
+  const fullTime =
+    fixture.displayScore?.fullTime ||
+    fixture.score?.regularTime ||
+    fixture.goals ||
+    fixture.score?.fullTime;
+  const extraTime = fixture.displayScore?.afterExtraTime || fixture.score?.extraTime;
+  const penalties = fixture.displayScore?.penalties || fixture.score?.penalties;
+  const duration = fixture.displayScore?.duration || fixture.score?.duration;
+
+  const ft = hasScore(fullTime)
+    ? {
+        home: toScoreNumber(fullTime.home),
+        away: toScoreNumber(fullTime.away),
+      }
+    : { home: 0, away: 0 };
+
+  const extraTimeHome = hasScore(extraTime) ? toScoreNumber(extraTime.home) : 0;
+  const extraTimeAway = hasScore(extraTime) ? toScoreNumber(extraTime.away) : 0;
+  const extraTimeChangedScore = extraTimeHome !== 0 || extraTimeAway !== 0;
+  const hasExtraTime =
+    hasScore(extraTime) &&
+    (duration === 'EXTRA_TIME' || (duration === 'PENALTY_SHOOTOUT' && extraTimeChangedScore));
+  const afterEt = hasExtraTime
+    ? {
+        home: ft.home + extraTimeHome,
+        away: ft.away + extraTimeAway,
+      }
+    : null;
+
+  const pens = hasScore(penalties)
+    ? {
+        home: toScoreNumber(penalties.home),
+        away: toScoreNumber(penalties.away),
+      }
+    : null;
+
+  return { ft, afterEt, pens };
+};
+
 /* ─── Recent Results Tab ────────────────────────────────────────── */
 function RecentResults({ roomId, currentUserId, predictions }) {
   const [results, setResults] = useState([]);
@@ -468,8 +518,9 @@ function RecentResults({ roomId, currentUserId, predictions }) {
     <div className="results-list animate-fade-up">
       {finished.map(fixture => {
         const fid        = fixture.fixture?.id;
-        const homeGoals  = fixture.goals?.home ?? 0;
-        const awayGoals  = fixture.goals?.away ?? 0;
+        const scoreBreakdown = getFixtureScoreBreakdown(fixture);
+        const homeGoals  = scoreBreakdown.ft.home;
+        const awayGoals  = scoreBreakdown.ft.away;
         const outcome    = homeGoals > awayGoals ? 'home' : awayGoals > homeGoals ? 'away' : 'draw';
         const homeName   = fixture.teams?.home?.name;
         const awayName   = fixture.teams?.away?.name;
@@ -507,9 +558,27 @@ function RecentResults({ roomId, currentUserId, predictions }) {
             <div className="result-comp">{fixture.league?.name}</div>
             <div className="result-teams">
               <span className="result-team truncate">{homeName}</span>
-              <span className="result-score">{homeGoals} – {awayGoals}</span>
+              <span className="result-score">
+                {homeGoals} – {awayGoals}
+                <small>FT</small>
+              </span>
               <span className="result-team truncate" style={{ textAlign: 'right' }}>{awayName}</span>
             </div>
+
+            {(scoreBreakdown.afterEt || scoreBreakdown.pens) && (
+              <div className="result-score-details">
+                {scoreBreakdown.afterEt && (
+                  <span>
+                    {scoreBreakdown.afterEt.home} – {scoreBreakdown.afterEt.away} after ET
+                  </span>
+                )}
+                {scoreBreakdown.pens && (
+                  <span>
+                    {scoreBreakdown.pens.home} – {scoreBreakdown.pens.away} pens
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="result-vote">
               {hasVoted ? (

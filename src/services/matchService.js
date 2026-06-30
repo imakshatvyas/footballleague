@@ -31,6 +31,9 @@ function statusMap(status) {
 }
 
 function normalize(match) {
+  const regularTimeScore = match.score?.regularTime || match.score?.fullTime;
+  const fullTimeScore = regularTimeScore || match.score?.fullTime;
+
   return {
     fixture: {
       id: match.id,
@@ -63,8 +66,15 @@ function normalize(match) {
     },
 
     goals: {
-      home: match.score?.fullTime?.home,
-      away: match.score?.fullTime?.away,
+      home: fullTimeScore?.home,
+      away: fullTimeScore?.away,
+    },
+
+    displayScore: {
+      duration: match.score?.duration,
+      fullTime: fullTimeScore,
+      afterExtraTime: match.score?.extraTime,
+      penalties: match.score?.penalties,
     },
 
     score: match.score,
