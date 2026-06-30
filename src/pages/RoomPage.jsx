@@ -334,50 +334,89 @@ function FullLeaderboard({ entries, currentUserId }) {
   }
 
   const top3 = entries.slice(0, 3);
-  const rest = entries.slice(3);
-  const medals = ['🥇', '🥈', '🥉'];
-  const medalColors = ['#FF9500', '#B0B8C1', '#CD8B3A'];
+  const totalPoints = entries.reduce((sum, entry) => sum + Number(entry.points || 0), 0);
+  const totalPredictions = entries.reduce((sum, entry) => sum + Number(entry.totalPredictions || 0), 0);
+  const roomAccuracy = entries.length
+    ? Math.round(entries.reduce((sum, entry) => sum + Number(entry.accuracy || 0), 0) / entries.length)
+    : 0;
 
   return (
-    <div className="animate-fade-up">
-      {/* Podium */}
-      <div className="podium">
-        {[top3[1], top3[0], top3[2]].filter(Boolean).map((entry, visualIndex) => {
-          const actualRank = top3.indexOf(entry);
-          const heights = [100, 130, 80]; // 2nd, 1st, 3rd
-          return (
-            <div
-              key={entry.userId}
-              className={`podium-block ${entry.userId === currentUserId ? 'podium-block--you' : ''}`}
-              style={{ height: heights[visualIndex] }}
-            >
-              <div className="podium-medal">{medals[actualRank]}</div>
-              <div className="podium-name truncate">{entry.displayName?.split(' ')[0]}</div>
-              <div className="podium-pts">{entry.points ?? 0}</div>
-              <div className="podium-bar" style={{ background: medalColors[actualRank], opacity: 0.2 + (actualRank === 0 ? 0.3 : 0) }} />
-            </div>
-          );
-        })}
+    <div className="leaderboard-dashboard animate-fade-up">
+      <div className="leaderboard-heading">
+        <div>
+          <p className="section-label">Standings</p>
+          <h2>Leaderboard</h2>
+        </div>
+        <span>{entries.length} players</span>
       </div>
 
-      {/* Full list */}
-      <div className="lb-list">
+      <div className="leaderboard-summary">
+        <div className="leaderboard-summary-card">
+          <strong>{entries.length}</strong>
+          <span>Total players</span>
+        </div>
+        <div className="leaderboard-summary-card">
+          <strong>{totalPredictions}</strong>
+          <span>Total predictions</span>
+        </div>
+        <div className="leaderboard-summary-card leaderboard-summary-card--wide">
+          <strong>{totalPoints}</strong>
+          <span>Room points · {roomAccuracy}% average accuracy</span>
+        </div>
+      </div>
+
+      <div className="top-player-grid">
+        {top3.map((entry, index) => (
+          <div
+            key={entry.userId}
+            className={`top-player-card ${index === 0 ? 'top-player-card--first' : ''} ${entry.userId === currentUserId ? 'top-player-card--you' : ''}`}
+          >
+            <div className="top-player-rank">{index + 1}</div>
+            <InitialsAvatar name={entry.displayName} size="md" />
+            <div className="top-player-info">
+              <strong className="truncate">{entry.displayName || 'Player'}</strong>
+              <span>{entry.userId === currentUserId ? 'You' : `Player ${index + 1}`}</span>
+            </div>
+            <div className="top-player-stats">
+              <div>
+                <span>Correct</span>
+                <strong>{entry.correctPredictions ?? 0}</strong>
+              </div>
+              <div>
+                <span>Predictions</span>
+                <strong>{entry.totalPredictions ?? 0}</strong>
+              </div>
+              <div>
+                <span>Points</span>
+                <strong>{entry.points ?? 0}</strong>
+              </div>
+            </div>
+            <div className="top-player-chips">
+              <span>{entry.currentStreak ?? 0} streak</span>
+              <span>{entry.exactScoreAccuracy ?? 0}% exact</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="leaderboard-table">
+        <div className="leaderboard-table-title">Global Ranking</div>
         {entries.map((entry, i) => (
           <div
             key={entry.userId}
             className={`lb-row ${entry.userId === currentUserId ? 'lb-row--you' : ''} animate-fade-up`}
             style={{ animationDelay: `${i * 40}ms` }}
           >
-            <div className={`lb-rank ${i < 3 ? 'lb-rank--top' : ''}`}>
-              {i < 3 ? medals[i] : i + 1}
-            </div>
+            <div className={`lb-rank ${i < 3 ? 'lb-rank--top' : ''}`}>{i + 1}</div>
             <InitialsAvatar name={entry.displayName} size="md" />
             <div className="lb-info">
               <div className="lb-name truncate">
                 {entry.displayName || 'Player'}
                 {entry.userId === currentUserId && <span className="lb-you-tag">You</span>}
               </div>
-              <div className="lb-sub">{entry.correctPredictions ?? 0} correct · {entry.accuracy ?? 0}% acc</div>
+              <div className="lb-sub">
+                {entry.currentStreak ?? 0} streak · {entry.accuracy ?? 0}% acc · {entry.exactScoreAccuracy ?? 0}% exact
+              </div>
             </div>
             <div className="lb-pts-col">
               <div className="lb-pts">{entry.points ?? 0}</div>

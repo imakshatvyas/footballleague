@@ -67,6 +67,7 @@ const buildFinishedMatchMap = (matches) =>
 
     matchMap.set(String(getFixtureId(match)), {
       fixtureId: getFixtureId(match),
+      date: match?.fixture?.date ?? match?.date ?? null,
       ...getFinishedScore(match),
     });
 
@@ -78,10 +79,42 @@ const createEmptyStats = (userId, displayName) => ({
   displayName,
   points: 0,
   correctPredictions: 0,
+  exactScorePredictions: 0,
   totalPredictions: 0,
   accuracy: 0,
+  exactScoreAccuracy: 0,
+  currentStreak: 0,
+  bestStreak: 0,
   movement: 0,
+  completedPredictions: [],
 });
+
+const getStreaks = (completedPredictions) => {
+  const oldestFirst = completedPredictions
+    .slice()
+    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+  let runningStreak = 0;
+  let bestStreak = 0;
+
+  oldestFirst.forEach((prediction) => {
+    if (prediction.correctWinner) {
+      runningStreak += 1;
+      bestStreak = Math.max(bestStreak, runningStreak);
+    } else {
+      runningStreak = 0;
+    }
+  });
+
+  const newestFirst = oldestFirst.slice().reverse();
+  let currentStreak = 0;
+
+  for (const prediction of newestFirst) {
+    if (!prediction.correctWinner) break;
+    currentStreak += 1;
+  }
+
+  return { currentStreak, bestStreak };
+};
 
 export const getRoomLeaderboard = async (roomId) => {
   if (!roomId) {
@@ -143,6 +176,17 @@ export const getRoomLeaderboard = async (roomId) => {
       (predictedWinner === "home" || predictedWinner === "away") &&
       predictedWinner === actualWinner;
 
+    const predictedHomeGoals = toNumber(prediction.predictedHomeGoals);
+    const predictedAwayGoals = toNumber(prediction.predictedAwayGoals);
+    const hasExactScore =
+      hasCorrectWinner &&
+      predictedHomeGoals === match.homeGoals && predictedAwayGoals === match.awayGoals;
+
+    statsByUserId[userId].completedPredictions.push({
+      date: match.date,
+      correctWinner: hasCorrectWinner,
+    });
+
     if (!hasCorrectWinner) {
       return;
     }
@@ -150,23 +194,29 @@ export const getRoomLeaderboard = async (roomId) => {
     statsByUserId[userId].correctPredictions += 1;
     statsByUserId[userId].points += 1;
 
-    const predictedHomeGoals = toNumber(prediction.predictedHomeGoals);
-    const predictedAwayGoals = toNumber(prediction.predictedAwayGoals);
-    const hasExactScore =
-      predictedHomeGoals === match.homeGoals && predictedAwayGoals === match.awayGoals;
-
     if (hasExactScore) {
+      statsByUserId[userId].exactScorePredictions += 1;
       statsByUserId[userId].points += 0.5;
     }
   });
 
   return Object.values(statsByUserId)
-    .map((stats) => ({
-      ...stats,
-      accuracy:
-        stats.totalPredictions > 0
-          ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100)
-          : 0,
-    }))
+    .map((stats) => {
+      const streaks = getStreaks(stats.completedPredictions);
+
+      return {
+        ...stats,
+        ...streaks,
+        accuracy:
+          stats.totalPredictions > 0
+            ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100)
+            : 0,
+        exactScoreAccuracy:
+          stats.totalPredictions > 0
+            ? Math.round((stats.exactScorePredictions / stats.totalPredictions) * 100)
+            : 0,
+        completedPredictions: undefined,
+      };
+    })
     .sort((a, b) => b.points - a.points);
 };
