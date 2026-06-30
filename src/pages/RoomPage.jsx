@@ -441,6 +441,27 @@ const hasScore = (score) =>
   toScoreNumber(score.home) !== null &&
   toScoreNumber(score.away) !== null;
 
+const getScoreWinner = (score) => {
+  if (!hasScore(score)) return null;
+  const homeGoals = toScoreNumber(score.home);
+  const awayGoals = toScoreNumber(score.away);
+
+  if (homeGoals > awayGoals) return 'home';
+  if (awayGoals > homeGoals) return 'away';
+  return 'draw';
+};
+
+const mapApiWinner = (winner) => {
+  if (winner === 'HOME_TEAM' || winner === 'HOME') return 'home';
+  if (winner === 'AWAY_TEAM' || winner === 'AWAY') return 'away';
+  return null;
+};
+
+const getDecisiveWinner = (score) => {
+  const winner = getScoreWinner(score);
+  return winner && winner !== 'draw' ? winner : null;
+};
+
 const getFixtureScoreBreakdown = (fixture) => {
   const fullTime =
     fixture.displayScore?.fullTime ||
@@ -478,7 +499,17 @@ const getFixtureScoreBreakdown = (fixture) => {
       }
     : null;
 
-  return { ft, afterEt, pens };
+  const ftWinner = getScoreWinner(ft);
+  const winner =
+    ftWinner !== 'draw'
+      ? ftWinner
+      : getDecisiveWinner(pens) ||
+        getDecisiveWinner(extraTime) ||
+        getDecisiveWinner(fixture.score?.fullTime) ||
+        mapApiWinner(fixture.score?.winner) ||
+        'draw';
+
+  return { ft, afterEt, pens, winner };
 };
 
 /* ─── Recent Results Tab ────────────────────────────────────────── */
@@ -521,7 +552,7 @@ function RecentResults({ roomId, currentUserId, predictions }) {
         const scoreBreakdown = getFixtureScoreBreakdown(fixture);
         const homeGoals  = scoreBreakdown.ft.home;
         const awayGoals  = scoreBreakdown.ft.away;
-        const outcome    = homeGoals > awayGoals ? 'home' : awayGoals > homeGoals ? 'away' : 'draw';
+        const outcome    = scoreBreakdown.winner;
         const homeName   = fixture.teams?.home?.name;
         const awayName   = fixture.teams?.away?.name;
         const myPred = predictions[fid];

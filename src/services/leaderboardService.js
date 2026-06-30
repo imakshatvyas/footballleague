@@ -47,7 +47,61 @@ const getFinishedScore = (match) => {
   };
 };
 
-const getActualWinner = ({ homeGoals, awayGoals }) => {
+const getScoreWinner = (score) => {
+  const homeGoals = toNumber(score?.home);
+  const awayGoals = toNumber(score?.away);
+
+  if (homeGoals === null || awayGoals === null) return null;
+  if (homeGoals > awayGoals) return "home";
+  if (awayGoals > homeGoals) return "away";
+  return "draw";
+};
+
+const mapApiWinner = (winner) => {
+  if (winner === "HOME_TEAM" || winner === "HOME") return "home";
+  if (winner === "AWAY_TEAM" || winner === "AWAY") return "away";
+  return null;
+};
+
+const getActualWinner = (match) => {
+  const fullTimeWinner = getScoreWinner(getFinishedScore(match));
+
+  if (fullTimeWinner && fullTimeWinner !== "draw") {
+    return fullTimeWinner;
+  }
+
+  const penaltyWinner = getScoreWinner(
+    match?.displayScore?.penalties ?? match?.score?.penalties
+  );
+
+  if (penaltyWinner && penaltyWinner !== "draw") {
+    return penaltyWinner;
+  }
+
+  const extraTimeWinner = getScoreWinner(
+    match?.displayScore?.afterExtraTime ?? match?.score?.extraTime
+  );
+
+  if (extraTimeWinner && extraTimeWinner !== "draw") {
+    return extraTimeWinner;
+  }
+
+  const finalScoreWinner = getScoreWinner(match?.score?.fullTime);
+
+  if (finalScoreWinner && finalScoreWinner !== "draw") {
+    return finalScoreWinner;
+  }
+
+  const apiWinner = mapApiWinner(match?.score?.winner);
+
+  if (apiWinner) {
+    return apiWinner;
+  }
+
+  return "draw";
+};
+
+const getWinnerFromScore = ({ homeGoals, awayGoals }) => {
   if (homeGoals > awayGoals) return "home";
   if (awayGoals > homeGoals) return "away";
   return "draw";
@@ -72,6 +126,7 @@ const buildFinishedMatchMap = (matches) =>
     matchMap.set(String(getFixtureId(match)), {
       fixtureId: getFixtureId(match),
       date: match?.fixture?.date ?? match?.date ?? null,
+      actualWinner: getActualWinner(match),
       ...getFinishedScore(match),
     });
 
@@ -174,7 +229,7 @@ export const getRoomLeaderboard = async (roomId) => {
 
     statsByUserId[userId].totalPredictions += 1;
 
-    const actualWinner = getActualWinner(match);
+    const actualWinner = match.actualWinner || getWinnerFromScore(match);
     const predictedWinner = prediction.prediction;
     const hasCorrectWinner =
       (predictedWinner === "home" || predictedWinner === "away") &&

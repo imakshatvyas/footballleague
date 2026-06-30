@@ -100,6 +100,54 @@ const getWinner = ({ homeGoals, awayGoals }) => {
   return 'draw';
 };
 
+const getScoreWinner = (score) => {
+  const homeGoals = toNumber(score?.home);
+  const awayGoals = toNumber(score?.away);
+
+  if (homeGoals === null || awayGoals === null) return null;
+  if (homeGoals > awayGoals) return 'home';
+  if (awayGoals > homeGoals) return 'away';
+  return 'draw';
+};
+
+const mapApiWinner = (winner) => {
+  if (winner === 'HOME_TEAM' || winner === 'HOME') return 'home';
+  if (winner === 'AWAY_TEAM' || winner === 'AWAY') return 'away';
+  return null;
+};
+
+const getPredictionWinner = (match, fullTimeScore) => {
+  const fullTimeWinner = getWinner(fullTimeScore);
+
+  if (fullTimeWinner !== 'draw') {
+    return fullTimeWinner;
+  }
+
+  const penaltyWinner = getScoreWinner(
+    match?.displayScore?.penalties ?? match?.score?.penalties
+  );
+
+  if (penaltyWinner && penaltyWinner !== 'draw') {
+    return penaltyWinner;
+  }
+
+  const extraTimeWinner = getScoreWinner(
+    match?.displayScore?.afterExtraTime ?? match?.score?.extraTime
+  );
+
+  if (extraTimeWinner && extraTimeWinner !== 'draw') {
+    return extraTimeWinner;
+  }
+
+  const finalScoreWinner = getScoreWinner(match?.score?.fullTime);
+
+  if (finalScoreWinner && finalScoreWinner !== 'draw') {
+    return finalScoreWinner;
+  }
+
+  return mapApiWinner(match?.score?.winner) || 'draw';
+};
+
 const buildMatchMap = (matches) =>
   (matches || []).reduce((map, match) => {
     const fixtureId = getFixtureId(match);
@@ -122,7 +170,7 @@ const scorePrediction = (prediction, match) => {
     };
   }
 
-  const actualWinner = getWinner(score);
+  const actualWinner = getPredictionWinner(match, score);
   const correctWinner = prediction.prediction === actualWinner;
   const exactScore =
     correctWinner &&
