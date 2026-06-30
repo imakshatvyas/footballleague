@@ -15,3 +15,62 @@
 .cj-input::placeholder { color: var(--text-disabled); }
 .cj-input:focus { border-color: var(--color-orange); }
 .cj-input--code { font-size: 24px; font-weight: 800; letter-spacing: 6px; }
+
+/* Sport Selector */
+.sport-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.sport-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.sport-options {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.sport-card {
+  flex: 1;
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.sport-card:hover {
+  border-color: var(--text-secondary);
+  background: var(--bg-surface);
+}
+.sport-card.active {
+  border-color: var(--color-orange);
+  background: var(--color-orange-subtle);
+}
+.sport-emoji {
+  font-size: 28px;
+}
+.sport-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.sport-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.3;
+}
+

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getSportService } from "../services/sports/sportResolver";
 import "./HeroMatch.css";
 
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"];
@@ -112,20 +113,22 @@ function formatUpdatedAt(updatedAt) {
   });
 }
 
-export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo }) {
+export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo, sport = "football" }) {
   const statusInfo = fixture ? getStatusInfo(fixture) : null;
   const countdown = useCountdown(statusInfo?.kickoff);
 
   const homeTeam = fixture?.teams?.home;
   const awayTeam = fixture?.teams?.away;
-  const homeGoals = fixture?.goals?.home;
-  const awayGoals = fixture?.goals?.away;
   const league = fixture?.league;
 
   const isLive = statusInfo?.isLive;
   const isNS = fixture?.fixture?.status?.short === "NS";
   const showScore = isLive || fixture?.fixture?.status?.short === "FT";
   const hasPrediction = userPrediction?.winner === "home" || userPrediction?.winner === "away";
+
+  const { config } = getSportService(sport);
+  const homeGoals = fixture?.goals?.home;
+  const awayGoals = fixture?.goals?.away;
 
   return (
     <div className={`hero-root ${isLive ? "hero-root--live" : ""}`}>
@@ -174,28 +177,42 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
               {showScore ? (
                 <>
                   <div className="hero-score">
-                    <span
-                      className={
-                        homeGoals > awayGoals
-                          ? "hero-score-num hero-score-num--winning"
-                          : "hero-score-num"
-                      }
-                    >
-                      {homeGoals ?? 0}
-                    </span>
-                    <span className="hero-score-sep">:</span>
-                    <span
-                      className={
-                        awayGoals > homeGoals
-                          ? "hero-score-num hero-score-num--winning"
-                          : "hero-score-num"
-                      }
-                    >
-                      {awayGoals ?? 0}
-                    </span>
+                    {config.hasScorePrediction ? (
+                      <>
+                        <span
+                          className={
+                            homeGoals > awayGoals
+                              ? "hero-score-num hero-score-num--winning"
+                              : "hero-score-num"
+                          }
+                        >
+                          {fixture.scoreDisplay?.homeScore || "0"}
+                        </span>
+                        <span className="hero-score-sep">:</span>
+                        <span
+                          className={
+                            awayGoals > homeGoals
+                              ? "hero-score-num hero-score-num--winning"
+                              : "hero-score-num"
+                          }
+                        >
+                          {fixture.scoreDisplay?.awayScore || "0"}
+                        </span>
+                      </>
+                    ) : (
+                      <div className="cricket-hero-score">
+                        <div className={fixture.fixture?.winner === 'home' ? "cricket-team-row winning" : "cricket-team-row"}>
+                          {fixture.scoreDisplay?.homeScore || "Yet to bat"}
+                        </div>
+                        <div className="hero-vs" style={{ margin: '2px 0' }}>VS</div>
+                        <div className={fixture.fixture?.winner === 'away' ? "cricket-team-row winning" : "cricket-team-row"}>
+                          {fixture.scoreDisplay?.awayScore || "Yet to bat"}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className={`hero-status ${isLive ? "hero-status--live" : ""}`}>
-                    {statusInfo?.label}
+                    {config.hasScorePrediction ? statusInfo?.label : (fixture.scoreDisplay?.statusLabel || statusInfo?.label)}
                   </div>
                 </>
               ) : (
@@ -225,19 +242,21 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
               </span>
             </div>
 
-            <div className="hero-detail hero-detail--score">
-              <span className="hero-detail-label">Your score</span>
-              <span className="hero-detail-value">
-                {hasPrediction
-                  ? `${userPrediction.homeGoals ?? 0} - ${userPrediction.awayGoals ?? 0}`
-                  : "-"}
-              </span>
-            </div>
+            {config.hasScorePrediction && (
+              <div className="hero-detail hero-detail--score">
+                <span className="hero-detail-label">Your score</span>
+                <span className="hero-detail-value">
+                  {hasPrediction
+                    ? `${userPrediction.homeGoals ?? 0} - ${userPrediction.awayGoals ?? 0}`
+                    : "-"}
+                </span>
+              </div>
+            )}
           </div>
         </>
       ) : (
         <div className="hero-empty">
-          <div className="hero-empty-icon">⚽</div>
+          <div className="hero-empty-icon">{sport === "cricket" ? "🏏" : "⚽"}</div>
           <div className="hero-empty-text">No upcoming matches</div>
         </div>
       )}

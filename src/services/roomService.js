@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 
-export const createRoom = async (userId, displayName, roomName) => {
+export const createRoom = async (userId, displayName, roomName, sport = 'football') => {
   const code = Math.random().toString(36).slice(2, 8).toUpperCase();
 
   // Create room
@@ -22,6 +22,7 @@ export const createRoom = async (userId, displayName, roomName) => {
     name: roomName,
     code,
     createdBy: userId,
+    sport: sport.toLowerCase(),
     members: [
       {
         uid: userId,

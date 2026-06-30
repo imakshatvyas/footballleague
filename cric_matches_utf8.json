@@ -1,0 +1,885 @@
+﻿{
+    "apikey":  "516d6b70-dbf1-48e2-8b38-cfb44f8c345c",
+    "data":  [
+                 {
+                     "id":  "395791ba-6c70-4887-a6f2-5f8a4eaf33e0",
+                     "name":  "Ireland vs Afghanistan, 5th ODI, Afghanistan tour of Ireland 2026",
+                     "matchType":  "odi",
+                     "status":  "Match starts at Aug 14, 09:45 GMT",
+                     "venue":  "Civil Service Cricket Club, Belfast",
+                     "date":  "2026-08-14",
+                     "dateTimeGMT":  "2026-08-14T09:45:00",
+                     "teams":  [
+                                   "Ireland",
+                                   "Afghanistan"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Afghanistan",
+                                          "shortname":  "AFG",
+                                          "img":  "https://g.cricapi.com/iapi/1-637877075587179422.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Ireland",
+                                          "shortname":  "IRE",
+                                          "img":  "https://g.cricapi.com/iapi/33-637926315578500224.png?w=48"
+                                      }
+                                  ],
+                     "series_id":  "2a1567e1-5bdd-4bdb-b60b-1979c5193533",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "abd11553-6082-4611-8994-8dca421f30ca",
+                     "name":  "Ireland vs Afghanistan, 4th ODI, Afghanistan tour of Ireland 2026",
+                     "matchType":  "odi",
+                     "status":  "Match starts at Aug 12, 09:45 GMT",
+                     "venue":  "Civil Service Cricket Club, Belfast",
+                     "date":  "2026-08-12",
+                     "dateTimeGMT":  "2026-08-12T09:45:00",
+                     "teams":  [
+                                   "Ireland",
+                                   "Afghanistan"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Afghanistan",
+                                          "shortname":  "AFG",
+                                          "img":  "https://g.cricapi.com/iapi/1-637877075587179422.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Ireland",
+                                          "shortname":  "IRE",
+                                          "img":  "https://g.cricapi.com/iapi/33-637926315578500224.png?w=48"
+                                      }
+                                  ],
+                     "series_id":  "2a1567e1-5bdd-4bdb-b60b-1979c5193533",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "f79960b5-bda8-46ae-99ef-c622ba4a8d44",
+                     "name":  "Ireland vs Afghanistan, 3rd ODI, Afghanistan tour of Ireland 2026",
+                     "matchType":  "odi",
+                     "status":  "Match starts at Aug 10, 09:45 GMT",
+                     "venue":  "Civil Service Cricket Club, Belfast",
+                     "date":  "2026-08-10",
+                     "dateTimeGMT":  "2026-08-10T09:45:00",
+                     "teams":  [
+                                   "Ireland",
+                                   "Afghanistan"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Afghanistan",
+                                          "shortname":  "AFG",
+                                          "img":  "https://g.cricapi.com/iapi/1-637877075587179422.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Ireland",
+                                          "shortname":  "IRE",
+                                          "img":  "https://g.cricapi.com/iapi/33-637926315578500224.png?w=48"
+                                      }
+                                  ],
+                     "series_id":  "2a1567e1-5bdd-4bdb-b60b-1979c5193533",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "0a1dc419-73e7-42cf-a45a-045e547bfe67",
+                     "name":  "Ireland vs Afghanistan, 2nd ODI, Afghanistan tour of Ireland 2026",
+                     "matchType":  "odi",
+                     "status":  "Match starts at Aug 07, 09:45 GMT",
+                     "venue":  "Bready Cricket Club, Bready, Northern Ireland",
+                     "date":  "2026-08-07",
+                     "dateTimeGMT":  "2026-08-07T09:45:00",
+                     "teams":  [
+                                   "Ireland",
+                                   "Afghanistan"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Afghanistan",
+                                          "shortname":  "AFG",
+                                          "img":  "https://g.cricapi.com/iapi/1-637877075587179422.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Ireland",
+                                          "shortname":  "IRE",
+                                          "img":  "https://g.cricapi.com/iapi/33-637926315578500224.png?w=48"
+                                      }
+                                  ],
+                     "series_id":  "2a1567e1-5bdd-4bdb-b60b-1979c5193533",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "b18d64b2-6b44-4147-847b-9fbab84b03dd",
+                     "name":  "Ireland vs Afghanistan, 1st ODI, Afghanistan tour of Ireland 2026",
+                     "matchType":  "odi",
+                     "status":  "Match starts at Aug 05, 09:45 GMT",
+                     "venue":  "Bready Cricket Club, Bready, Northern Ireland",
+                     "date":  "2026-08-05",
+                     "dateTimeGMT":  "2026-08-05T09:45:00",
+                     "teams":  [
+                                   "Ireland",
+                                   "Afghanistan"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Afghanistan",
+                                          "shortname":  "AFG",
+                                          "img":  "https://g.cricapi.com/iapi/1-637877075587179422.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Ireland",
+                                          "shortname":  "IRE",
+                                          "img":  "https://g.cricapi.com/iapi/33-637926315578500224.png?w=48"
+                                      }
+                                  ],
+                     "series_id":  "2a1567e1-5bdd-4bdb-b60b-1979c5193533",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "5d427fc3-0e81-4b98-8566-e01e461c30ed",
+                     "name":  "Sweden vs Portugal, 3rd T20I, Portugal tour of Sweden, 2026",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Jul 02, 08:00 GMT",
+                     "venue":  "Botkyrka Cricket Center, Stockholm",
+                     "date":  "2026-07-02",
+                     "dateTimeGMT":  "2026-07-02T08:00:00",
+                     "teams":  [
+                                   "Sweden",
+                                   "Portugal"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Portugal",
+                                          "shortname":  "PORT",
+                                          "img":  "https://g.cricapi.com/iapi/643-637872736165869493.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sweden",
+                                          "shortname":  "SWE",
+                                          "img":  "https://g.cricapi.com/iapi/659-637869111698226088.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "3977bda7-c3bf-4a15-912b-e80071d19f4c",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "b5378bc4-5ce7-473f-a215-375aa68f639a",
+                     "name":  "Sweden vs Portugal, 2nd T20I, Portugal tour of Sweden, 2026",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Jul 01, 12:00 GMT",
+                     "venue":  "Botkyrka Cricket Center, Stockholm",
+                     "date":  "2026-07-01",
+                     "dateTimeGMT":  "2026-07-01T12:00:00",
+                     "teams":  [
+                                   "Sweden",
+                                   "Portugal"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Portugal",
+                                          "shortname":  "PORT",
+                                          "img":  "https://g.cricapi.com/iapi/643-637872736165869493.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sweden",
+                                          "shortname":  "SWE",
+                                          "img":  "https://g.cricapi.com/iapi/659-637869111698226088.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "3977bda7-c3bf-4a15-912b-e80071d19f4c",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "8854884a-29f2-40bb-9498-fc97d93cb45b",
+                     "name":  "Sweden vs Portugal, 1st T20I, Portugal tour of Sweden, 2026",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Jul 01, 07:30 GMT",
+                     "venue":  "Botkyrka Cricket Center, Stockholm",
+                     "date":  "2026-07-01",
+                     "dateTimeGMT":  "2026-07-01T07:30:00",
+                     "teams":  [
+                                   "Sweden",
+                                   "Portugal"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Portugal",
+                                          "shortname":  "PORT",
+                                          "img":  "https://g.cricapi.com/iapi/643-637872736165869493.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sweden",
+                                          "shortname":  "SWE",
+                                          "img":  "https://g.cricapi.com/iapi/659-637869111698226088.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "3977bda7-c3bf-4a15-912b-e80071d19f4c",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "d706c8e9-cbcc-43c1-9cc1-d2f1f535255f",
+                     "name":  "Australia Women vs New Zealand Women, 3rd ODI, New Zealand Women tour of Australia, 2026-27",
+                     "status":  "Match starts at Mar 11, 23:05 GMT",
+                     "venue":  "Junction Oval, Melbourne",
+                     "date":  "2027-03-11",
+                     "dateTimeGMT":  "2027-03-11T23:05:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "9fb123f3-3b4c-44d0-ac7f-c59caad294cf",
+                     "name":  "Australia Women vs New Zealand Women, 2nd ODI, New Zealand Women tour of Australia, 2026-27",
+                     "status":  "Match starts at Mar 08, 03:50 GMT",
+                     "venue":  "Junction Oval, Melbourne",
+                     "date":  "2027-03-08",
+                     "dateTimeGMT":  "2027-03-08T03:50:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "4ecac146-b142-4454-bbb4-5c8b841e3c48",
+                     "name":  "Australia Women vs New Zealand Women, 1st ODI, New Zealand Women tour of Australia, 2026-27",
+                     "status":  "Match starts at Mar 06, 03:50 GMT",
+                     "venue":  "Manuka Oval, Canberra",
+                     "date":  "2027-03-06",
+                     "dateTimeGMT":  "2027-03-06T03:50:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "1e140eff-3d6d-4b62-bfcf-cd723dd26cd7",
+                     "name":  "Australia Women vs New Zealand Women, 3rd T20I, New Zealand Women tour of Australia, 2026-27",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Oct 22, 08:15 GMT",
+                     "venue":  "North Sydney Oval, Sydney",
+                     "date":  "2026-10-22",
+                     "dateTimeGMT":  "2026-10-22T08:15:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "2e5ee6e9-511f-434e-b794-9d3a792e2a6e",
+                     "name":  "Australia Women vs New Zealand Women, 2nd T20I, New Zealand Women tour of Australia, 2026-27",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Oct 20, 08:15 GMT",
+                     "venue":  "North Sydney Oval, Sydney",
+                     "date":  "2026-10-20",
+                     "dateTimeGMT":  "2026-10-20T08:15:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "96c28c45-810b-4794-984e-e5207b34dfa3",
+                     "name":  "Australia Women vs New Zealand Women, 1st T20I, New Zealand Women tour of Australia, 2026-27",
+                     "matchType":  "t20",
+                     "status":  "Match starts at Oct 18, 08:15 GMT",
+                     "venue":  "North Sydney Oval, Sydney",
+                     "date":  "2026-10-18",
+                     "dateTimeGMT":  "2026-10-18T08:15:00",
+                     "teams":  [
+                                   "Australia Women",
+                                   "New Zealand Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia Women",
+                                          "shortname":  "AUSW",
+                                          "img":  "https://g.cricapi.com/iapi/7-637877070884402012.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "New Zealand Women",
+                                          "shortname":  "NZW",
+                                          "img":  "https://g.cricapi.com/iapi/58-637877077173296488.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "1b3e9639-fa3c-48e2-bb98-d945134e8b11",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "82af1fda-57d2-48fa-a1d8-f36873633a3b",
+                     "name":  "Bulgaria Women vs Serbia Women, 4th T20I, Serbia Women tour of Bulgaria, 2026",
+                     "matchType":  "t20",
+                     "status":  "Serbia Women won by 5 wkts",
+                     "venue":  "National Sports Academy, Sofia",
+                     "date":  "2026-06-28",
+                     "dateTimeGMT":  "2026-06-28T06:00:00",
+                     "teams":  [
+                                   "Bulgaria Women",
+                                   "Serbia Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Bulgaria Women",
+                                          "shortname":  "BW",
+                                          "img":  "https://h.cricapi.com/img/icon512.png"
+                                      },
+                                      {
+                                          "name":  "Serbia Women",
+                                          "shortname":  "SW",
+                                          "img":  "https://g.cricapi.com/iapi/651-637876983315009937.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  117,
+                                       "w":  9,
+                                       "o":  20,
+                                       "inning":  "bulgaria women Inning 1"
+                                   },
+                                   {
+                                       "r":  119,
+                                       "w":  5,
+                                       "o":  16.2,
+                                       "inning":  "Bulgaria Women,Serbia Women Inning 1"
+                                   }
+                               ],
+                     "series_id":  "2def9566-fcdf-4e93-ab78-7b7edf0cea3d",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "a594a8a2-7b03-4545-8a29-4d9695d77731",
+                     "name":  "Bulgaria Women vs Serbia Women, 3rd T20I, Serbia Women tour of Bulgaria, 2026",
+                     "matchType":  "t20",
+                     "status":  "Serbia Women won by 84 runs",
+                     "venue":  "National Sports Academy, Sofia",
+                     "date":  "2026-06-27",
+                     "dateTimeGMT":  "2026-06-27T11:30:00",
+                     "teams":  [
+                                   "Bulgaria Women",
+                                   "Serbia Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Bulgaria Women",
+                                          "shortname":  "BW",
+                                          "img":  "https://h.cricapi.com/img/icon512.png"
+                                      },
+                                      {
+                                          "name":  "Serbia Women",
+                                          "shortname":  "SW",
+                                          "img":  "https://g.cricapi.com/iapi/651-637876983315009937.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  199,
+                                       "w":  3,
+                                       "o":  20,
+                                       "inning":  "Serbia Women Inning 1"
+                                   },
+                                   {
+                                       "r":  115,
+                                       "w":  8,
+                                       "o":  20,
+                                       "inning":  "Bulgaria Women Inning 1"
+                                   }
+                               ],
+                     "series_id":  "2def9566-fcdf-4e93-ab78-7b7edf0cea3d",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "953110a9-cd79-4206-8b64-2b7c5e650540",
+                     "name":  "Bulgaria Women vs Serbia Women, 2nd T20I, Serbia Women tour of Bulgaria, 2026",
+                     "matchType":  "t20",
+                     "status":  "Bulgaria Women won by 7 runs",
+                     "venue":  "National Sports Academy, Sofia",
+                     "date":  "2026-06-27",
+                     "dateTimeGMT":  "2026-06-27T06:00:00",
+                     "teams":  [
+                                   "Bulgaria Women",
+                                   "Serbia Women"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Bulgaria Women",
+                                          "shortname":  "BW",
+                                          "img":  "https://h.cricapi.com/img/icon512.png"
+                                      },
+                                      {
+                                          "name":  "Serbia Women",
+                                          "shortname":  "SW",
+                                          "img":  "https://g.cricapi.com/iapi/651-637876983315009937.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  138,
+                                       "w":  4,
+                                       "o":  20,
+                                       "inning":  "Bulgaria Women Inning 1"
+                                   },
+                                   {
+                                       "r":  131,
+                                       "w":  7,
+                                       "o":  20,
+                                       "inning":  "Serbia Women Inning 1"
+                                   }
+                               ],
+                     "series_id":  "2def9566-fcdf-4e93-ab78-7b7edf0cea3d",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "57703e5b-6187-4ea9-829a-bd202036bb1a",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 3rd unofficial ODI, Sri Lanka Women U19 tour of India 2026",
+                     "status":  "Match starts at Jul 06, 08:30 GMT",
+                     "venue":  "Cricket Association Puducherry Siechem Ground, Puducherry",
+                     "date":  "2026-07-06",
+                     "dateTimeGMT":  "2026-07-06T08:30:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "3da9c5e6-3c4e-4e1d-a47f-33e2458b9f0b",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 2nd unofficial ODI, Sri Lanka Women U19 tour of India 2026",
+                     "status":  "Match starts at Jul 03, 03:30 GMT",
+                     "venue":  "Cricket Association Puducherry Siechem Ground, Puducherry",
+                     "date":  "2026-07-03",
+                     "dateTimeGMT":  "2026-07-03T03:30:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "64a659a7-944e-4a32-a340-8462655e1ac1",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 1st unofficial ODI, Sri Lanka Women U19 tour of India 2026",
+                     "status":  "India Women U19 won by 120 runs",
+                     "venue":  "Cricket Association Puducherry Ground 2, Puducherry",
+                     "date":  "2026-06-30",
+                     "dateTimeGMT":  "2026-06-30T03:30:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  279,
+                                       "w":  8,
+                                       "o":  50,
+                                       "inning":  "india women u19 Inning 1"
+                                   },
+                                   {
+                                       "r":  159,
+                                       "w":  10,
+                                       "o":  48.5,
+                                       "inning":  "India Women U19,Sri Lanka Women U19 Inning 1"
+                                   }
+                               ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "55447fa6-0100-4190-9a39-76bb234adc31",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 3rd unofficial T20, Sri Lanka Women U19 tour of India 2026",
+                     "matchType":  "t20",
+                     "status":  "India Women U19 won by 7 wkts",
+                     "venue":  "MA Chidambaram Stadium, Chennai",
+                     "date":  "2026-06-27",
+                     "dateTimeGMT":  "2026-06-27T07:30:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  116,
+                                       "w":  7,
+                                       "o":  20,
+                                       "inning":  "sri lanka women u19 Inning 1"
+                                   },
+                                   {
+                                       "r":  120,
+                                       "w":  3,
+                                       "o":  18.4,
+                                       "inning":  "India Women U19,Sri Lanka Women U19 Inning 1"
+                                   }
+                               ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "949166e7-5d0f-456b-bed5-5007460e257c",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 2nd unofficial T20, Sri Lanka Women U19 tour of India 2026",
+                     "matchType":  "t20",
+                     "status":  "India Women U19 won by 11 runs",
+                     "venue":  "MA Chidambaram Stadium, Chennai",
+                     "date":  "2026-06-24",
+                     "dateTimeGMT":  "2026-06-24T00:00:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  134,
+                                       "w":  6,
+                                       "o":  20,
+                                       "inning":  "india women u19 Inning 1"
+                                   },
+                                   {
+                                       "r":  123,
+                                       "w":  8,
+                                       "o":  20,
+                                       "inning":  "India Women U19,Sri Lanka Women U19 Inning 1"
+                                   }
+                               ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "97708a63-6219-4ee9-87c4-0e181fcb8a5e",
+                     "name":  "India Women U19 vs Sri Lanka Women U19, 1st unofficial T20, Sri Lanka Women U19 tour of India 2026",
+                     "matchType":  "t20",
+                     "status":  "India Women U19 won by 93 runs",
+                     "venue":  "MA Chidambaram Stadium, Chennai",
+                     "date":  "2026-06-22",
+                     "dateTimeGMT":  "2026-06-22T00:00:00",
+                     "teams":  [
+                                   "India Women U19",
+                                   "Sri Lanka Women U19"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "India Women U19",
+                                          "shortname":  "IND W-U19",
+                                          "img":  "https://g.cricapi.com/iapi/3831-638101641377822973.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Sri Lanka Women U19",
+                                          "shortname":  "SLW-U19",
+                                          "img":  "https://g.cricapi.com/iapi/4191-638101639309122979.webp?w=48"
+                                      }
+                                  ],
+                     "score":  [
+                                   {
+                                       "r":  170,
+                                       "w":  6,
+                                       "o":  20,
+                                       "inning":  "india women u19 Inning 1"
+                                   },
+                                   {
+                                       "r":  77,
+                                       "w":  10,
+                                       "o":  18.3,
+                                       "inning":  "India Women U19,Sri Lanka Women U19 Inning 1"
+                                   }
+                               ],
+                     "series_id":  "cb552713-036d-4d90-93c1-d4aef3ab3829",
+                     "fantasyEnabled":  true,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  true,
+                     "matchEnded":  true
+                 },
+                 {
+                     "id":  "c9945bbb-e02f-4007-9791-e67f20eeb552",
+                     "name":  "Australia vs Bangladesh, 2nd Test, Bangladesh tour of Australia, 2026",
+                     "matchType":  "test",
+                     "status":  "Match starts at Aug 22, 00:00 GMT",
+                     "venue":  "Great Barrier Reef Arena, Mackay",
+                     "date":  "2026-08-22",
+                     "dateTimeGMT":  "2026-08-22T00:00:00",
+                     "teams":  [
+                                   "Australia",
+                                   "Bangladesh"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia",
+                                          "shortname":  "AUS",
+                                          "img":  "https://g.cricapi.com/iapi/6-637877070670541994.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Bangladesh",
+                                          "shortname":  "BAN",
+                                          "img":  "https://g.cricapi.com/iapi/9-637877074109248302.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "f85a6390-cbf2-4f07-bc5e-891df17ff179",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 },
+                 {
+                     "id":  "dc37e960-29e5-4a76-9f56-02931dfd21f9",
+                     "name":  "Australia vs Bangladesh, 1st Test, Bangladesh tour of Australia, 2026",
+                     "matchType":  "test",
+                     "status":  "Match starts at Aug 13, 00:30 GMT",
+                     "venue":  "Marrara Cricket Ground, Darwin",
+                     "date":  "2026-08-13",
+                     "dateTimeGMT":  "2026-08-13T00:30:00",
+                     "teams":  [
+                                   "Australia",
+                                   "Bangladesh"
+                               ],
+                     "teamInfo":  [
+                                      {
+                                          "name":  "Australia",
+                                          "shortname":  "AUS",
+                                          "img":  "https://g.cricapi.com/iapi/6-637877070670541994.webp?w=48"
+                                      },
+                                      {
+                                          "name":  "Bangladesh",
+                                          "shortname":  "BAN",
+                                          "img":  "https://g.cricapi.com/iapi/9-637877074109248302.webp?w=48"
+                                      }
+                                  ],
+                     "series_id":  "f85a6390-cbf2-4f07-bc5e-891df17ff179",
+                     "fantasyEnabled":  false,
+                     "bbbEnabled":  false,
+                     "hasSquad":  false,
+                     "matchStarted":  false,
+                     "matchEnded":  false
+                 }
+             ],
+    "status":  "success",
+    "info":  {
+                 "hitsToday":  1,
+                 "hitsUsed":  1,
+                 "hitsLimit":  100,
+                 "credits":  0,
+                 "server":  25,
+                 "offsetRows":  0,
+                 "totalRows":  15396,
+                 "queryTime":  46.8306,
+                 "s":  0,
+                 "cache":  1
+             }
+}

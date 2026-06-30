@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getSportService } from "../services/sports/sportResolver";
 import "./PredictionCard.css";
 
 const LIVE_STATUSES = ["LIVE", "1H", "HT", "2H", "ET", "BT", "P"];
@@ -140,6 +141,7 @@ export default function PredictionCard({
   onPredict,
   animationDelay = 0,
   roomPredictions = [],
+  sport = "football",
 }) {
   const fixtureId = fixture?.fixture?.id;
   const home = fixture?.teams?.home;
@@ -147,6 +149,8 @@ export default function PredictionCard({
   const status = getMatchStatus(fixture);
   const locked = isLocked(fixture);
   const goals = getGoals(fixture);
+
+  const { config } = getSportService(sport);
 
   const allPredictionsForFixture = Array.isArray(roomPredictions)
     ? roomPredictions
@@ -183,23 +187,26 @@ export default function PredictionCard({
     }
 
     if (typeof selected === "string") {
-      const score = getInitialScore(selected, 0, 0);
       setSelectedWinner(selected);
-      setHomeGoals(score.homeGoals);
-      setAwayGoals(score.awayGoals);
+      if (config.hasScorePrediction) {
+        const score = getInitialScore(selected, 0, 0);
+        setHomeGoals(score.homeGoals);
+        setAwayGoals(score.awayGoals);
+      }
       return;
     }
 
-    const score = getInitialScore(
-      selected.winner,
-      selected.homeGoals ?? 0,
-      selected.awayGoals ?? 0
-    );
-
     setSelectedWinner(selected.winner || null);
-    setHomeGoals(score.homeGoals);
-    setAwayGoals(score.awayGoals);
-  }, [selected]);
+    if (config.hasScorePrediction) {
+      const score = getInitialScore(
+        selected.winner,
+        selected.homeGoals ?? 0,
+        selected.awayGoals ?? 0
+      );
+      setHomeGoals(score.homeGoals);
+      setAwayGoals(score.awayGoals);
+    }
+  }, [selected, config.hasScorePrediction]);
 
   const scoreWinner = useMemo(
     () => getScoreWinner(homeGoals, awayGoals),
@@ -210,10 +217,12 @@ export default function PredictionCard({
   const canSave = Boolean(selectedWinner && scoreMatchesWinner && !locked && !saving);
   const isSaved =
     typeof selected === "string"
-      ? false
+      ? selected === selectedWinner
       : selected?.winner === selectedWinner &&
-        Number(selected?.homeGoals ?? 0) === homeGoals &&
-        Number(selected?.awayGoals ?? 0) === awayGoals;
+        (config.hasScorePrediction
+          ? Number(selected?.homeGoals ?? 0) === homeGoals &&
+            Number(selected?.awayGoals ?? 0) === awayGoals
+          : true);
 
   const handleSelectWinner = (team) => {
     if (locked || saving) return;
@@ -221,10 +230,17 @@ export default function PredictionCard({
     const nextWinner = selectedWinner === team ? null : team;
     setSelectedWinner(nextWinner);
 
-    if (nextWinner) {
-      const score = getInitialScore(nextWinner, homeGoals, awayGoals);
-      setHomeGoals(score.homeGoals);
-      setAwayGoals(score.awayGoals);
+    if (!config.hasScorePrediction) {
+      if (nextWinner) {
+        // Save Cricket prediction immediately (one-click prediction save)
+        onPredict(fixtureId, nextWinner, 0, 0);
+      }
+    } else {
+      if (nextWinner) {
+        const score = getInitialScore(nextWinner, homeGoals, awayGoals);
+        setHomeGoals(score.homeGoals);
+        setAwayGoals(score.awayGoals);
+      }
     }
   };
 
@@ -273,7 +289,11 @@ export default function PredictionCard({
       {status.isLive && (
         <div className="pred-live-score">
           <span>{home?.name}</span>
-          <strong>{goals.home} - {goals.away}</strong>
+          <strong>
+            {config.hasScorePrediction
+              ? `${goals.home} - ${goals.away}`
+              : `${fixture.scoreDisplay?.homeScore || "0"} - ${fixture.scoreDisplay?.awayScore || "0"}`}
+          </strong>
           <span>{away?.name}</span>
         </div>
       )}
@@ -312,10 +332,10 @@ export default function PredictionCard({
         </button>
       </div>
 
-      {selectedWinner && !locked && (
+      {selectedWinner && !locked && config.hasScorePrediction && (
         <div className="pred-score-section">
           <div className="pred-score-topline">
-            <span className="pred-score-label">Scoreline</span>
+            <span className="pred-score-label">{config.scoreLabel}</span>
             <span className="pred-score-preview">
               {homeGoals} - {awayGoals}
             </span>
@@ -385,7 +405,11 @@ export default function PredictionCard({
         <div className="pred-locked-pick">
           <span>Your prediction</span>
           <strong>
-            {getWinnerLabel(selectedWinner, home?.name, away?.name)} - {homeGoals} : {awayGoals}
+            {config.hasScorePrediction ? (
+              `${getWinnerLabel(selectedWinner, home?.name, away?.name)} - ${homeGoals} : ${awayGoals}`
+            ) : (
+              getWinnerLabel(selectedWinner, home?.name, away?.name)
+            )}
           </strong>
         </div>
       )}
@@ -398,11 +422,10 @@ export default function PredictionCard({
 
       <div className="pred-footer">
         <div className="pred-scoring-info">
-          <span>Winner +1</span>
-          <span>Exact score +0.5</span>
+          <span>{config.pointsInfo}</span>
         </div>
 
-        {!locked && selectedWinner && (
+        {!locked && selectedWinner && config.hasScorePrediction && (
           <button
             className={`pred-save-btn ${isSaved ? "pred-save-btn--saved" : ""}`}
             disabled={!canSave}

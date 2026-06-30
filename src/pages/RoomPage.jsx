@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getRoom, getRoomMembers, leaveRoom } from '../services/roomService';
-import { getTournamentMatches } from '../services/matchService';
+import { getTournamentMatches, getRecentResults } from '../services/matchService';
 import { getRoomPredictions, getUserPredictions, savePrediction } from '../services/predictionService';
 import { getRoomLeaderboard } from '../services/leaderboardService';
 import HeroMatch from '../components/HeroMatch';
@@ -43,12 +43,18 @@ export default function RoomPage() {
     const load = async () => {
       if (firstLoad) setLoading(true);
       try {
-        const [roomData, fixtureData, predData, roomPredData, lbData, memberData] = await Promise.all([
-          getRoom(roomId),
-          getTournamentMatches(roomId),
-          getUserPredictions(user.uid, roomId),
-          getRoomPredictions(roomId),
-          getRoomLeaderboard(roomId),
+        const roomData = await getRoom(roomId);
+        if (!roomData) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+        const sport = roomData.sport || 'football';
+
+        const [fixtureData, predData, roomPredData, lbData, memberData] = await Promise.all([
+          getTournamentMatches(sport),
+          getUserPredictions(user.uid, roomId, sport),
+          getRoomPredictions(roomId, sport),
+          getRoomLeaderboard(roomId, sport),
           getRoomMembers(roomId),
         ]);
 
@@ -148,6 +154,8 @@ const handlePredict = useCallback(
       [fixtureId]: true,
     }));
 
+    const sport = room?.sport || 'football';
+
     try {
       await savePrediction(
         user.uid,
@@ -155,7 +163,8 @@ const handlePredict = useCallback(
         fixtureId,
         outcome,
         predictedHomeGoals,
-        predictedAwayGoals
+        predictedAwayGoals,
+        sport
       );
 
       setPredictions((p) => ({
@@ -193,7 +202,7 @@ const handlePredict = useCallback(
       }));
     }
   },
-  [user, roomId]
+  [user, roomId, room]
 );
 
   const handleLeaveRoom = useCallback(async () => {
@@ -228,6 +237,7 @@ const handlePredict = useCallback(
         memberCount={members.length}
         userPrediction={heroPrediction}
         onOpenRoomInfo={() => setInfoOpen(true)}
+        sport={room?.sport || 'football'}
       />
 
       <RoomInfoSheet
@@ -284,6 +294,7 @@ const handlePredict = useCallback(
                       onPredict={handlePredict}
                       animationDelay={i * 60}
                       roomPredictions={roomPredictions[String(fixture.fixture.id)] || []}
+                      sport={room?.sport || 'football'}
                     />
                   ))}
                 </div>
@@ -306,7 +317,7 @@ const handlePredict = useCallback(
         )}
 
         {tab === 'Results' && (
-          <RecentResults roomId={roomId} currentUserId={user.uid} predictions={predictions} />
+          <RecentResults roomId={roomId} currentUserId={user.uid} predictions={predictions} sport={room?.sport || 'football'} />
         )}
 
         {tab === 'Members' && (
@@ -513,19 +524,15 @@ const getFixtureScoreBreakdown = (fixture) => {
 };
 
 /* ─── Recent Results Tab ────────────────────────────────────────── */
-function RecentResults({ roomId, currentUserId, predictions }) {
+function RecentResults({ roomId, currentUserId, predictions, sport }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Import dynamically to avoid circular deps
-    import('../services/matchService').then(({ getRecentResults }) => {
-      if (!getRecentResults) { setLoading(false); return; }
-      getRecentResults(roomId)
-        .then(r => setResults(r || []))
-        .finally(() => setLoading(false));
-    });
-  }, [roomId]);
+    getRecentResults(sport)
+      .then(r => setResults(r || []))
+      .finally(() => setLoading(false));
+  }, [roomId, sport]);
 
   if (loading) return <ResultsSkeleton />;
 

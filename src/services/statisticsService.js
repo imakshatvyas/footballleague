@@ -155,7 +155,7 @@ const buildMatchMap = (matches) =>
     return map;
   }, new Map());
 
-const scorePrediction = (prediction, match) => {
+const scoreFootballPrediction = (prediction, match) => {
   const status = match?.fixture?.status?.short;
   const score = getActualScore(match);
 
@@ -184,6 +184,33 @@ const scorePrediction = (prediction, match) => {
     points: correctWinner ? (exactScore ? 1.5 : 1) : 0,
     actualHomeGoals: score.homeGoals,
     actualAwayGoals: score.awayGoals,
+  };
+};
+
+const scoreCricketPrediction = (prediction, match) => {
+  const status = match?.fixture?.status?.short;
+
+  if (status !== 'FT') {
+    return {
+      isFinished: false,
+      correctWinner: false,
+      exactScore: false,
+      points: 0,
+      actualHomeGoals: null,
+      actualAwayGoals: null,
+    };
+  }
+
+  const actualWinner = match.fixture?.winner;
+  const correctWinner = prediction.prediction === actualWinner;
+
+  return {
+    isFinished: true,
+    correctWinner,
+    exactScore: false,
+    points: correctWinner ? 1 : 0,
+    actualHomeGoals: match.goals?.home,
+    actualAwayGoals: match.goals?.away,
   };
 };
 
@@ -235,31 +262,41 @@ const calculateStreaks = (finishedHistory) => {
   return { currentStreak, bestStreak };
 };
 
-export const calculatePredictionHistory = async (userId, cachedMatches = null) => {
-  const [predictions, matches] = await Promise.all([
+export const calculatePredictionHistory = async (userId, cachedMatches = null, rooms = []) => {
+  const [predictions, footballMatches, cricketMatches] = await Promise.all([
     getUserPredictions(userId),
-    cachedMatches ? Promise.resolve(cachedMatches) : getTournamentMatches(),
+    getTournamentMatches('football'),
+    getTournamentMatches('cricket'),
   ]);
 
-  const matchMap = buildMatchMap(matches);
+  const footballMap = buildMatchMap(footballMatches);
+  const cricketMap = buildMatchMap(cricketMatches);
+  const roomSportMap = new Map(rooms.map((room) => [room.id, room.sport || 'football']));
 
   return predictions
     .map((prediction) => {
-      const match = matchMap.get(String(prediction.fixtureId));
-      const scored = scorePrediction(prediction, match);
+      const sport = roomSportMap.get(prediction.roomId) || 'football';
+      const isCricket = sport === 'cricket';
+      const match = isCricket ? cricketMap.get(String(prediction.fixtureId)) : footballMap.get(String(prediction.fixtureId));
+
+      const scored = isCricket
+        ? scoreCricketPrediction(prediction, match)
+        : scoreFootballPrediction(prediction, match);
+
       const homeName = match?.teams?.home?.name || 'Home';
       const awayName = match?.teams?.away?.name || 'Away';
       const predictionDate = toDate(prediction.updatedAt) || toDate(match?.fixture?.date);
 
       return {
         id: prediction.id,
+        sport,
         fixtureId: String(prediction.fixtureId),
         fixture: `${homeName} vs ${awayName}`,
         homeTeam: homeName,
         awayTeam: awayName,
         predictedWinner: prediction.prediction,
-        predictedHomeGoals: toNumber(prediction.predictedHomeGoals) ?? 0,
-        predictedAwayGoals: toNumber(prediction.predictedAwayGoals) ?? 0,
+        predictedHomeGoals: isCricket ? 0 : (toNumber(prediction.predictedHomeGoals) ?? 0),
+        predictedAwayGoals: isCricket ? 0 : (toNumber(prediction.predictedAwayGoals) ?? 0),
         actualHomeGoals: scored.actualHomeGoals,
         actualAwayGoals: scored.actualAwayGoals,
         correctWinner: scored.correctWinner,
@@ -271,19 +308,6 @@ export const calculatePredictionHistory = async (userId, cachedMatches = null) =
       };
     })
     .sort((a, b) => (b.date?.getTime?.() || 0) - (a.date?.getTime?.() || 0));
-};
-
-export const calculateRoomStats = async (roomId, currentUserId = null) => {
-  const leaderboard = await getRoomLeaderboard(roomId);
-
-  return leaderboard.map((entry, index) => ({
-    ...entry,
-    rank: index + 1,
-    medal: index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : null,
-    isCurrentUser: entry.userId === currentUserId,
-    exactScoreAccuracy: entry.exactScoreAccuracy ?? 0,
-    currentStreak: entry.currentStreak ?? 0,
-  }));
 };
 
 export const calculateAchievements = (stats, existingUnlocked = []) => {
@@ -328,30 +352,36 @@ export const saveFavoriteTeam = async (userId, team) => {
 export const calculateUserStats = async (userId) => {
   const userSnap = await getDoc(doc(db, 'users', userId));
   const userProfile = userSnap.exists() ? userSnap.data() : {};
-  const [matches, rooms] = await Promise.all([
-    getTournamentMatches(),
-    getUserRoomsFromProfile(userProfile),
-  ]);
-  const history = await calculatePredictionHistory(userId, matches);
-  const finishedHistory = history.filter((prediction) => prediction.isFinished);
+  const rooms = await getUserRoomsFromProfile(userProfile);
+  
+  const history = await calculatePredictionHistory(userId, null, rooms);
+  
+  // Calculate Streaks & stats overall
+  const finishedHistory = history.filter((p) => p.isFinished);
   const { currentStreak, bestStreak } = calculateStreaks(finishedHistory);
+
+  // Group history by sport
+  const footballHistory = finishedHistory.filter((p) => p.sport === 'football');
+  const cricketHistory = finishedHistory.filter((p) => p.sport === 'cricket');
+
+  const { currentStreak: fStreak, bestStreak: fBest } = calculateStreaks(footballHistory);
+  const { currentStreak: cStreak, bestStreak: cBest } = calculateStreaks(cricketHistory);
 
   const hasLeaderboardTop = await rooms.reduce(async (previous, room) => {
     if (await previous) return true;
-    const leaderboard = await getRoomLeaderboard(room.id);
+    const leaderboard = await getRoomLeaderboard(room.id, room.sport || 'football');
     return leaderboard[0]?.userId === userId;
   }, Promise.resolve(false));
 
-  const correctWinnerPredictions = finishedHistory.filter(
-    (prediction) => prediction.correctWinner
-  ).length;
-  const exactScorePredictions = finishedHistory.filter(
-    (prediction) => prediction.exactScore
-  ).length;
-  const totalPoints = finishedHistory.reduce(
-    (sum, prediction) => sum + prediction.points,
-    0
-  );
+  const totalPoints = finishedHistory.reduce((sum, p) => sum + p.points, 0);
+  const fPoints = footballHistory.reduce((sum, p) => sum + p.points, 0);
+  const cPoints = cricketHistory.reduce((sum, p) => sum + p.points, 0);
+
+  const correctWinnerPredictions = finishedHistory.filter((p) => p.correctWinner).length;
+  const fCorrectWinners = footballHistory.filter((p) => p.correctWinner).length;
+  const cCorrectWinners = cricketHistory.filter((p) => p.correctWinner).length;
+
+  const exactScorePredictions = finishedHistory.filter((p) => p.exactScore).length;
 
   const stats = {
     joinDate: toDate(userProfile.createdAt),
@@ -367,6 +397,30 @@ export const calculateUserStats = async (userId) => {
     bestStreak,
     hasLeaderboardTop,
     favoriteTeam: userProfile.favoriteTeam || null,
+  };
+
+  const footballStats = {
+    totalPredictions: history.filter(p => p.sport === 'football').length,
+    scoredPredictions: footballHistory.length,
+    correctWinnerPredictions: fCorrectWinners,
+    exactScorePredictions,
+    accuracy: calculateAccuracy(fCorrectWinners, footballHistory.length),
+    exactScoreAccuracy: calculateAccuracy(exactScorePredictions, footballHistory.length),
+    totalPoints: fPoints,
+    currentStreak: fStreak,
+    bestStreak: fBest,
+  };
+
+  const cricketStats = {
+    totalPredictions: history.filter(p => p.sport === 'cricket').length,
+    scoredPredictions: cricketHistory.length,
+    correctWinnerPredictions: cCorrectWinners,
+    exactScorePredictions: 0,
+    accuracy: calculateAccuracy(cCorrectWinners, cricketHistory.length),
+    exactScoreAccuracy: 0,
+    totalPoints: cPoints,
+    currentStreak: cStreak,
+    bestStreak: cBest,
   };
 
   const achievements = calculateAchievements(stats, userProfile.achievements || []);
@@ -389,6 +443,8 @@ export const calculateUserStats = async (userId) => {
   return {
     profile: userProfile,
     stats,
+    footballStats,
+    cricketStats,
     history,
     achievements,
   };

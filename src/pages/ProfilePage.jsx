@@ -51,6 +51,7 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savingTeam, setSavingTeam] = useState(false);
+  const [activeTab, setActiveTab] = useState('overall');
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -87,15 +88,28 @@ export default function ProfilePage() {
   const history = profileData?.history || [];
   const favoriteTeam = stats?.favoriteTeam;
 
-  const statCards = [
-    { label: 'Total Predictions', value: stats?.totalPredictions ?? 0 },
-    { label: 'Correct Winners', value: stats?.correctWinnerPredictions ?? 0 },
-    { label: 'Exact Scores', value: stats?.exactScorePredictions ?? 0 },
-    { label: 'Accuracy', value: `${stats?.accuracy ?? 0}%` },
-    { label: 'Total Points', value: formatPoints(stats?.totalPoints ?? 0) },
-    { label: 'Current Streak', value: stats?.currentStreak ?? 0 },
-    { label: 'Best Streak', value: stats?.bestStreak ?? 0 },
-  ];
+  const activeStats = useMemo(() => {
+    if (activeTab === 'football') return profileData?.footballStats;
+    if (activeTab === 'cricket') return profileData?.cricketStats;
+    return profileData?.stats;
+  }, [activeTab, profileData]);
+
+  const statCards = useMemo(() => {
+    const cards = [
+      { label: 'Total Predictions', value: activeStats?.totalPredictions ?? 0 },
+      { label: 'Correct Winners', value: activeStats?.correctWinnerPredictions ?? 0 },
+    ];
+    if (activeTab !== 'cricket') {
+      cards.push({ label: 'Exact Scores', value: activeStats?.exactScorePredictions ?? 0 });
+    }
+    cards.push(
+      { label: 'Accuracy', value: `${activeStats?.accuracy ?? 0}%` },
+      { label: 'Total Points', value: formatPoints(activeStats?.totalPoints ?? 0) },
+      { label: 'Current Streak', value: activeStats?.currentStreak ?? 0 },
+      { label: 'Best Streak', value: activeStats?.bestStreak ?? 0 }
+    );
+    return cards;
+  }, [activeStats, activeTab]);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -167,7 +181,32 @@ export default function ProfilePage() {
       </section>
 
       <section className="profile-section">
-        <p className="section-label">Football statistics</p>
+        <div className="profile-stats-header">
+          <p className="section-label">Prediction statistics</p>
+          <div className="stats-tabs">
+            <button
+              className={`stats-tab ${activeTab === 'overall' ? 'stats-tab--active' : ''}`}
+              onClick={() => setActiveTab('overall')}
+              type="button"
+            >
+              Overall
+            </button>
+            <button
+              className={`stats-tab ${activeTab === 'football' ? 'stats-tab--active' : ''}`}
+              onClick={() => setActiveTab('football')}
+              type="button"
+            >
+              Football
+            </button>
+            <button
+              className={`stats-tab ${activeTab === 'cricket' ? 'stats-tab--active' : ''}`}
+              onClick={() => setActiveTab('cricket')}
+              type="button"
+            >
+              Cricket
+            </button>
+          </div>
+        </div>
         <div className="profile-stat-grid">
           {statCards.map((card, index) => (
             <div

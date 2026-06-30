@@ -43,9 +43,14 @@ export default function DashboardPage() {
             style={{ animationDelay: `${i * 60}ms` }}
             onClick={() => navigate(`/room/${room.id}`)}
           >
-            <div className="room-card-icon">⚽</div>
+            <div className="room-card-icon">{room.sport === 'cricket' ? '🏏' : '⚽'}</div>
             <div className="room-card-info">
-              <div className="room-card-name">{room.name}</div>
+              <div className="room-card-name">
+                {room.name}
+                <span className={`room-sport-badge room-sport-badge--${room.sport || 'football'}`}>
+                  {room.sport === 'cricket' ? 'Cricket' : 'Football'}
+                </span>
+              </div>
               <div className="room-card-meta">{room.memberIds?.length || 1} members · Code: {room.code}</div>
             </div>
             <div className="room-card-arrow">›</div>
@@ -66,7 +71,7 @@ function EmptyDashboard() {
   return (
     <div className="dash-root">
       <div className="dash-empty">
-        <div className="dash-empty-ball">⚽</div>
+        <div className="dash-empty-ball">🏆</div>
         <h2 className="dash-empty-title">Start your league</h2>
         <p className="dash-empty-sub">Create a room and invite friends to compete on every match.</p>
         <div className="dash-actions" style={{ marginTop: 0 }}>

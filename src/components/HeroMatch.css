@@ -405,3 +405,28 @@
     grid-template-columns: 1fr 96px;
   }
 }
+
+/* Cricket Score Layout in Hero */
+.cricket-hero-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-default);
+  min-width: 140px;
+}
+.cricket-team-row {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.cricket-team-row.winning {
+  color: var(--text-primary);
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+}
+

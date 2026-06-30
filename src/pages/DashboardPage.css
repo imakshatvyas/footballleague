@@ -24,3 +24,28 @@
 .dash-empty-ball { font-size: 64px; margin-bottom: 8px; opacity: 0.6; }
 .dash-empty-title { font-size: 24px; font-weight: 800; color: var(--text-primary); }
 .dash-empty-sub { font-size: 14px; color: var(--text-muted); max-width: 260px; line-height: 1.6; margin-bottom: 8px; }
+
+/* Sport Badge */
+.room-sport-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.room-sport-badge--football {
+  background: rgba(255, 90, 0, 0.1);
+  color: var(--color-orange);
+  border: 0.5px solid rgba(255, 90, 0, 0.2);
+}
+.room-sport-badge--cricket {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-info);
+  border: 0.5px solid rgba(59, 130, 246, 0.2);
+}
+

@@ -503,3 +503,44 @@
     gap: 6px;
   }
 }
+
+/* Stats Tab Swapper */
+.profile-stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.profile-stats-header .section-label {
+  margin-bottom: 0;
+}
+.stats-tabs {
+  display: flex;
+  background: var(--bg-surface);
+  border: 0.5px solid var(--border-default);
+  padding: 2px;
+  border-radius: var(--radius-md);
+  gap: 2px;
+}
+.stats-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.stats-tab:hover {
+  color: var(--text-primary);
+}
+.stats-tab--active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 0.5px solid var(--border-strong);
+}
+
