@@ -11,9 +11,10 @@ import PredictionCard from '../components/PredictionCard';
 import MiniLeaderboard from '../components/MiniLeaderboard';
 import ProgressCard from '../components/ProgressCard';
 import RoomInfoSheet from '../components/RoomInfoSheet';
+import ChatWindow from '../components/Chat/ChatWindow';
 import './RoomPage.css';
 
-const TABS = ['Predict', 'Standings', 'Results', 'Members'];
+const TABS = ['Predict', 'Standings', 'Results', 'Members', 'Chat'];
 
 export default function RoomPage() {
   const { roomId } = useParams();
@@ -310,6 +311,10 @@ const handlePredict = useCallback(
 
         {tab === 'Members' && (
           <MembersList members={members} leaderboard={leaderboard} currentUserId={user.uid} />
+        )}
+
+        {tab === 'Chat' && (
+          <ChatWindow roomId={roomId} user={user} />
         )}
       </div>
     </div>
