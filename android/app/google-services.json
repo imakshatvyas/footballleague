@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "746213842816",
+    "project_id": "football-69cb7",
+    "storage_bucket": "football-69cb7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:746213842816:android:071d6a597cba972715ab65",
+        "android_client_info": {
+          "package_name": "com.akshat.footballpredictor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "746213842816-n8bnoi88k2s3ia97o4o7a5asg210ojrk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAma6Rseqe-553P5zb3ZW2XoblG5ThdFCI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "746213842816-n8bnoi88k2s3ia97o4o7a5asg210ojrk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

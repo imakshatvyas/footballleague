@@ -1,18 +1,27 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { subscribeToAuth } from '../services/authService';
+import { createContext, useContext, useEffect, useState } from "react";
+import { subscribeToAuth } from "../services/authService";
+import { initPushNotifications } from "../services/pushNotificationService";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user,    setUser]    = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = subscribeToAuth(u => {
+    const unsubscribe = subscribeToAuth(async (u) => {
+      console.log("Auth state changed:", u);
+
       setUser(u);
       setLoading(false);
+
+      if (u) {
+        console.log("Initializing push notifications...");
+        await initPushNotifications(u.uid);
+      }
     });
-    return unsub;
+
+    return unsubscribe;
   }, []);
 
   return (
@@ -22,8 +31,12 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
-  return ctx;
-};
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+
+  return context;
+}
