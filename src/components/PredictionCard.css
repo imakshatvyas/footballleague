@@ -608,6 +608,43 @@
   box-shadow: 0 0 6px rgba(156, 163, 175, 0.3);
 }
 
+.pred-support-voters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pred-support-voter-group {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 0.5px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.pred-support-voter-group span {
+  display: block;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pred-support-voter-group strong {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 /* Mobile responsive support bar */
 @media (max-width: 520px) {
   .pred-support-section {
@@ -628,6 +665,10 @@
     flex-wrap: wrap;
     gap: 10px;
     font-size: 9px;
+  }
+
+  .pred-support-voters {
+    grid-template-columns: 1fr;
   }
 
   .pred-support-dot {

@@ -139,7 +139,7 @@ export default function PredictionCard({
   saving,
   onPredict,
   animationDelay = 0,
-  roomPredictions = {},
+  roomPredictions = [],
 }) {
   const fixtureId = fixture?.fixture?.id;
   const home = fixture?.teams?.home;
@@ -148,10 +148,9 @@ export default function PredictionCard({
   const locked = isLocked(fixture);
   const goals = getGoals(fixture);
 
-  // Calculate community vote split
-  const allPredictionsForFixture = Object.entries(roomPredictions)
-    .filter(([key]) => String(key) === String(fixtureId))
-    .map(([, pred]) => pred);
+  const allPredictionsForFixture = Array.isArray(roomPredictions)
+    ? roomPredictions
+    : [];
 
   const homeVotes = allPredictionsForFixture.filter(
     (pred) => pred?.winner === "home"
@@ -164,6 +163,12 @@ export default function PredictionCard({
   const totalVotes = homeVotes + awayVotes;
   const homePercent = totalVotes > 0 ? (homeVotes / totalVotes) * 100 : 0;
   const awayPercent = totalVotes > 0 ? (awayVotes / totalVotes) * 100 : 0;
+  const homeVoters = allPredictionsForFixture
+    .filter((pred) => pred?.winner === "home")
+    .map((pred) => pred.displayName || "Player");
+  const awayVoters = allPredictionsForFixture
+    .filter((pred) => pred?.winner === "away")
+    .map((pred) => pred.displayName || "Player");
 
   const [selectedWinner, setSelectedWinner] = useState(null);
   const [homeGoals, setHomeGoals] = useState(0);
@@ -442,12 +447,22 @@ export default function PredictionCard({
           <div className="pred-support-legend">
             <span className="pred-support-legend-item">
               <span className="pred-support-dot pred-support-dot--home"></span>
-              {home?.name}
+              {home?.name} ({homeVotes})
             </span>
             <span className="pred-support-legend-item">
               <span className="pred-support-dot pred-support-dot--away"></span>
-              {away?.name}
+              {away?.name} ({awayVotes})
             </span>
+          </div>
+          <div className="pred-support-voters">
+            <div className="pred-support-voter-group">
+              <span>{home?.name}</span>
+              <strong>{homeVoters.length ? homeVoters.join(", ") : "No votes yet"}</strong>
+            </div>
+            <div className="pred-support-voter-group">
+              <span>{away?.name}</span>
+              <strong>{awayVoters.length ? awayVoters.join(", ") : "No votes yet"}</strong>
+            </div>
           </div>
         </div>
       )}

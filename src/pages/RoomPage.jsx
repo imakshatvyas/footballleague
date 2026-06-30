@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getRoom, getRoomMembers, leaveRoom } from '../services/roomService';
 import { getTournamentMatches } from '../services/matchService';
-import { getUserPredictions, savePrediction } from '../services/predictionService';
+import { getRoomPredictions, getUserPredictions, savePrediction } from '../services/predictionService';
 import { getRoomLeaderboard } from '../services/leaderboardService';
 import HeroMatch from '../components/HeroMatch';
 import PredictionCard from '../components/PredictionCard';
@@ -23,6 +23,7 @@ export default function RoomPage() {
   const [room,        setRoom]        = useState(null);
   const [fixtures,    setFixtures]    = useState([]);
   const [predictions, setPredictions] = useState({});
+  const [roomPredictions, setRoomPredictions] = useState({});
   const [leaderboard, setLeaderboard] = useState([]);
   const [members,     setMembers]     = useState([]);
   const [liveMatch,   setLiveMatch]   = useState(null);
@@ -41,10 +42,11 @@ export default function RoomPage() {
     const load = async () => {
       if (firstLoad) setLoading(true);
       try {
-        const [roomData, fixtureData, predData, lbData, memberData] = await Promise.all([
+        const [roomData, fixtureData, predData, roomPredData, lbData, memberData] = await Promise.all([
           getRoom(roomId),
           getTournamentMatches(roomId),
           getUserPredictions(user.uid, roomId),
+          getRoomPredictions(roomId),
           getRoomLeaderboard(roomId),
           getRoomMembers(roomId),
         ]);
@@ -64,6 +66,29 @@ export default function RoomPage() {
           };
         });
         setPredictions(predMap);
+
+        const memberNameById = {};
+        (memberData || []).forEach((member) => {
+          memberNameById[member.uid] = member.displayName || member.name || 'Player';
+        });
+
+        const roomPredMap = {};
+        (roomPredData || []).forEach((prediction) => {
+          const fixtureKey = String(prediction.fixtureId);
+
+          if (!roomPredMap[fixtureKey]) {
+            roomPredMap[fixtureKey] = [];
+          }
+
+          roomPredMap[fixtureKey].push({
+            userId: prediction.userId,
+            displayName: memberNameById[prediction.userId] || 'Player',
+            winner: prediction.prediction,
+            homeGoals: prediction.predictedHomeGoals ?? 0,
+            awayGoals: prediction.predictedAwayGoals ?? 0,
+          });
+        });
+        setRoomPredictions(roomPredMap);
 
         const now = new Date();
         const predictionCutoff = new Date(now.getTime() + 34 * 60 * 60 * 1000);
@@ -140,6 +165,26 @@ const handlePredict = useCallback(
           awayGoals: predictedAwayGoals,
         },
       }));
+
+      setRoomPredictions((current) => {
+        const fixtureKey = String(fixtureId);
+        const existing = current[fixtureKey] || [];
+        const nextPrediction = {
+          userId: user.uid,
+          displayName: user.displayName || 'You',
+          winner: outcome,
+          homeGoals: predictedHomeGoals,
+          awayGoals: predictedAwayGoals,
+        };
+
+        return {
+          ...current,
+          [fixtureKey]: [
+            ...existing.filter((prediction) => prediction.userId !== user.uid),
+            nextPrediction,
+          ],
+        };
+      });
     } finally {
       setSaving((s) => ({
         ...s,
@@ -163,12 +208,12 @@ const handlePredict = useCallback(
 
   // ── Hero fixture = live first, then next upcoming ──
   const heroFixture = liveMatch || nextMatch;
-  const heroPrediction = heroFixture ? predictions[heroFixture.fixture.id] : null;
+  const heroPrediction = heroFixture ? predictions[String(heroFixture.fixture.id)] : null;
 
   // ── Prediction count stats ──────────────────────────
   const openFixtures = fixtures.filter(f => f.fixture?.status?.short === 'NS' && new Date(f.fixture?.date) > new Date());
   const totalFixtures  = openFixtures.length;
-  const predCount      = openFixtures.filter(f => predictions[f.fixture.id]).length;
+  const predCount      = openFixtures.filter(f => predictions[String(f.fixture.id)]).length;
 
   // ── Loading skeletons ────────────────────────────────
   if (loading) return <RoomSkeleton />;
@@ -233,11 +278,11 @@ const handlePredict = useCallback(
                     <PredictionCard
                       key={fixture.fixture.id}
                       fixture={fixture}
-                      selected={predictions[fixture.fixture.id]}
-                      saving={saving[fixture.fixture.id]}
+                      selected={predictions[String(fixture.fixture.id)]}
+                      saving={saving[String(fixture.fixture.id)]}
                       onPredict={handlePredict}
                       animationDelay={i * 60}
-                      roomPredictions={predictions}
+                      roomPredictions={roomPredictions[String(fixture.fixture.id)] || []}
                     />
                   ))}
                 </div>
