@@ -524,9 +524,94 @@ const getFixtureScoreBreakdown = (fixture) => {
 };
 
 /* ─── Recent Results Tab ────────────────────────────────────────── */
+/* ─── Cricket Match Categorization ─────────────────────────────────── */
+const getCricketCategory = (match) => {
+  const seriesName = (match.league?.name || "").toLowerCase();
+  const homeTeam = (match.teams?.home?.name || "").toLowerCase();
+  const awayTeam = (match.teams?.away?.name || "").toLowerCase();
+
+  // Exclude PSL
+  if (seriesName.includes("psl") || seriesName.includes("pakistan super league")) {
+    return null;
+  }
+
+  // 1. India Matches (Top Priority)
+  if (
+    homeTeam.includes("india") || 
+    awayTeam.includes("india") || 
+    seriesName.includes("india")
+  ) {
+    if (!homeTeam.includes("women") && !awayTeam.includes("women")) {
+      return "India Matches";
+    }
+  }
+
+  // 2. IPL
+  if (seriesName.includes("ipl") || seriesName.includes("indian premier league")) {
+    return "IPL";
+  }
+
+  // 3. BBL
+  if (seriesName.includes("bbl") || seriesName.includes("big bash")) {
+    return "BBL";
+  }
+
+  // 4. MLC / MLS
+  if (seriesName.includes("mlc") || seriesName.includes("mls") || seriesName.includes("major league cricket")) {
+    return "MLC / MLS";
+  }
+
+  // 5. World Cup & ICC Tournaments
+  if (
+    seriesName.includes("world cup") ||
+    seriesName.includes("t20 world cup") ||
+    seriesName.includes("odi world cup") ||
+    seriesName.includes("champions trophy") ||
+    seriesName.includes("world test championship") ||
+    seriesName.includes("wtc") ||
+    seriesName.includes("icc") ||
+    seriesName.includes("asia cup")
+  ) {
+    return "ICC Tournaments & World Cups";
+  }
+
+  // 6. International & Other Major Leagues
+  const isMajorLeague =
+    seriesName.includes("cpl") || seriesName.includes("caribbean premier league") ||
+    seriesName.includes("sa20") ||
+    seriesName.includes("the hundred") ||
+    seriesName.includes("ilt20") ||
+    seriesName.includes("lpl") ||
+    seriesName.includes("lanka premier league");
+
+  const isBilateralInternational =
+    seriesName.includes("tour of") ||
+    seriesName.includes("t20i") ||
+    seriesName.includes("odi") ||
+    seriesName.includes("test series") ||
+    (match.raw && (
+      String(match.raw.matchFormat || "").toLowerCase().includes("t20") ||
+      String(match.raw.matchFormat || "").toLowerCase().includes("odi") ||
+      String(match.raw.matchFormat || "").toLowerCase().includes("test")
+    ));
+
+  if (isMajorLeague || isBilateralInternational) {
+    return "International & Other Major Leagues";
+  }
+
+  return null; // Ignore minor tournaments
+};
+
+/* ─── Recent Results Tab ────────────────────────────────────────── */
 function RecentResults({ roomId, currentUserId, predictions, sport }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(() => {
+    if (sport === 'cricket') {
+      return { 'India Matches': true };
+    }
+    return {};
+  });
 
   useEffect(() => {
     getRecentResults(sport)
@@ -542,7 +627,37 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
     .slice()
     .sort((a, b) => new Date(b.fixture?.date) - new Date(a.fixture?.date));
 
-  if (!finished.length) {
+  // Group results by category/league
+  const groups = {};
+  finished.forEach(fixture => {
+    let cat = 'Other';
+    if (sport === 'cricket') {
+      cat = getCricketCategory(fixture);
+      if (!cat) return; // Skip minor leagues / PSL
+    } else {
+      cat = fixture.league?.name || 'World Cup';
+    }
+
+    if (!groups[cat]) {
+      groups[cat] = [];
+    }
+    groups[cat].push(fixture);
+  });
+
+  const categoryOrder = sport === 'cricket'
+    ? [
+        "India Matches",
+        "IPL",
+        "BBL",
+        "MLC / MLS",
+        "ICC Tournaments & World Cups",
+        "International & Other Major Leagues"
+      ]
+    : Object.keys(groups);
+
+  const activeCategories = categoryOrder.filter(cat => groups[cat] && groups[cat].length > 0);
+
+  if (!activeCategories.length) {
     return (
       <div className="empty-state">
         <div className="empty-state__icon">📊</div>
@@ -552,143 +667,200 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
     );
   }
 
+  const isCategoryExpanded = (cat) => {
+    if (sport === 'cricket') {
+      return !!expanded[cat];
+    }
+    return expanded[cat] !== false; // Football expanded by default
+  };
+
+  const toggleExpand = (cat) => {
+    setExpanded(prev => ({
+      ...prev,
+      [cat]: !isCategoryExpanded(cat)
+    }));
+  };
+
   return (
-    <div className="results-list animate-fade-up">
-      {finished.map(fixture => {
-        const fid        = fixture.fixture?.id;
-        const scoreBreakdown = getFixtureScoreBreakdown(fixture);
-        const homeGoals  = scoreBreakdown.ft.home;
-        const awayGoals  = scoreBreakdown.ft.away;
-        const outcome    = scoreBreakdown.winner;
-        const homeName   = fixture.teams?.home?.name;
-        const awayName   = fixture.teams?.away?.name;
-        const myPred = predictions[fid];
-        const hasVoted =
-          myPred?.winner === 'home' ||
-          myPred?.winner === 'away';
-
-        const winnerCorrect =
-          hasVoted &&
-          myPred?.winner === outcome;
-
-        const scoreCorrect =
-          winnerCorrect &&
-          Number(myPred?.homeGoals) === homeGoals &&
-          Number(myPred?.awayGoals) === awayGoals;
-
-        const earnedPoints =
-          winnerCorrect
-            ? scoreCorrect
-              ? 1.5
-              : 1
-            : 0;
-
-        let statusClass = 'result-card--novote';
-
-        if (hasVoted) {
-          statusClass = winnerCorrect
-            ? 'result-card--correct'
-            : 'result-card--wrong';
-        }
+    <div className="results-grouped animate-fade-up">
+      {activeCategories.map(cat => {
+        const catMatches = groups[cat];
+        const isExpanded = isCategoryExpanded(cat);
 
         return (
-          <div key={fid} className={`result-card ${statusClass}`}>
-            <div className="result-comp">{fixture.league?.name}</div>
-            <div className="result-teams">
-              <span className="result-team truncate">{homeName}</span>
-              <span className="result-score">
-                {homeGoals} – {awayGoals}
-                <small>FT</small>
+          <div key={cat} className="results-category-group">
+            <button
+              className={`results-category-bar ${isExpanded ? 'results-category-bar--expanded' : ''}`}
+              onClick={() => toggleExpand(cat)}
+            >
+              <div className="results-category-title">
+                <span className="results-category-icon">
+                  {cat === 'India Matches' ? '🇮🇳' :
+                   cat === 'IPL' ? '🏏' :
+                   cat === 'BBL' ? '🇦🇺' :
+                   cat === 'MLC / MLS' ? '🇺🇸' :
+                   cat === 'ICC Tournaments & World Cups' ? '🏆' : '🌍'}
+                </span>
+                <span className="results-category-name">{cat}</span>
+                <span className="results-category-count">{catMatches.length}</span>
+              </div>
+              <span className="results-category-chevron">
+                {isExpanded ? '▲' : '▼'}
               </span>
-              <span className="result-team truncate" style={{ textAlign: 'right' }}>{awayName}</span>
-            </div>
+            </button>
 
-            {(scoreBreakdown.afterEt || scoreBreakdown.pens) && (
-              <div className="result-score-details">
-                {scoreBreakdown.afterEt && (
-                  <span>
-                    {scoreBreakdown.afterEt.home} – {scoreBreakdown.afterEt.away} after ET
-                  </span>
-                )}
-                {scoreBreakdown.pens && (
-                  <span>
-                    {scoreBreakdown.pens.home} – {scoreBreakdown.pens.away} pens
-                  </span>
-                )}
+            {isExpanded && (
+              <div className="results-category-content results-list animate-fade-up">
+                {catMatches.map(fixture => {
+                  const fid        = fixture.fixture?.id;
+                  const scoreBreakdown = getFixtureScoreBreakdown(fixture);
+                  const homeGoals  = scoreBreakdown.ft.home;
+                  const awayGoals  = scoreBreakdown.ft.away;
+                  const outcome    = scoreBreakdown.winner;
+                  const homeName   = fixture.teams?.home?.name;
+                  const awayName   = fixture.teams?.away?.name;
+                  const myPred = predictions[fid];
+                  const hasVoted =
+                    myPred?.winner === 'home' ||
+                    myPred?.winner === 'away';
+
+                  const winnerCorrect =
+                    hasVoted &&
+                    myPred?.winner === outcome;
+
+                  const isCricket = sport === 'cricket';
+                  const displayHomeScore = isCricket ? (fixture.scoreDisplay?.homeScore || '—') : homeGoals;
+                  const displayAwayScore = isCricket ? (fixture.scoreDisplay?.awayScore || '—') : awayGoals;
+
+                  const scoreCorrect =
+                    !isCricket &&
+                    winnerCorrect &&
+                    Number(myPred?.homeGoals) === homeGoals &&
+                    Number(myPred?.awayGoals) === awayGoals;
+
+                  const earnedPoints =
+                    winnerCorrect
+                      ? scoreCorrect
+                        ? 1.5
+                        : 1
+                      : 0;
+
+                  let statusClass = 'result-card--novote';
+
+                  if (hasVoted) {
+                    statusClass = winnerCorrect
+                      ? 'result-card--correct'
+                      : 'result-card--wrong';
+                  }
+
+                  return (
+                    <div key={fid} className={`result-card ${statusClass}`}>
+                      <div className="result-comp">{fixture.league?.name}</div>
+                      <div className="result-teams">
+                        <span className="result-team truncate">{homeName}</span>
+                        <span className={`result-score ${isCricket ? 'result-score--cricket' : ''}`}>
+                          {isCricket ? (
+                            <div className="cricket-score-display">
+                              <span className="cricket-score-val">{displayHomeScore}</span>
+                              <span className="cricket-score-divider">vs</span>
+                              <span className="cricket-score-val" style={{ textAlign: 'right' }}>{displayAwayScore}</span>
+                            </div>
+                          ) : (
+                            <>
+                              {homeGoals} – {awayGoals}
+                              <small>FT</small>
+                            </>
+                          )}
+                        </span>
+                        <span className="result-team truncate" style={{ textAlign: 'right' }}>{awayName}</span>
+                      </div>
+
+                      {isCricket ? (
+                        fixture.scoreDisplay?.statusLabel && (
+                          <div className="result-score-details">
+                            <span className="cricket-status-badge">
+                              {fixture.scoreDisplay.statusLabel}
+                            </span>
+                          </div>
+                        )
+                      ) : (
+                        (scoreBreakdown.afterEt || scoreBreakdown.pens) && (
+                          <div className="result-score-details">
+                            {scoreBreakdown.afterEt && (
+                              <span>
+                                {scoreBreakdown.afterEt.home} – {scoreBreakdown.afterEt.away} after ET
+                              </span>
+                            )}
+                            {scoreBreakdown.pens && (
+                              <span>
+                                {scoreBreakdown.pens.home} – {scoreBreakdown.pens.away} pens
+                              </span>
+                            )}
+                          </div>
+                        )
+                      )}
+
+                      <div className="result-vote">
+                        {hasVoted ? (
+                          <span className="result-vote-label">
+                            You voted: {myPred?.winner === 'home' ? homeName : awayName}
+                          </span>
+                        ) : (
+                          <span className="result-vote-label result-vote-label--none">
+                            You voted: —
+                          </span>
+                        )}
+                      </div>
+
+                      {hasVoted && !isCricket && (
+                        <div className="result-predicted-score">
+                          Predicted Score: {myPred?.homeGoals} – {myPred?.awayGoals}
+                        </div>
+                      )}
+
+                      <div className="result-footer">
+                        {!hasVoted ? (
+                          <span className="result-badge result-badge--none">
+                            ⚪ Not Voted
+                          </span>
+                        ) : winnerCorrect ? (
+                          <span className="result-badge result-badge--correct">
+                            ✅ Winner Correct
+                            {scoreCorrect && (
+                              <div className="result-score-bonus">
+                                🎯 Exact Score Bonus
+                              </div>
+                            )}
+                            <span className="result-badge-points">
+                              +{earnedPoints} Points
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="result-badge result-badge--wrong">
+                            ❌ Wrong
+                            <span className="result-badge-points">
+                              0 Points
+                            </span>
+                          </span>
+                        )}
+
+                        <span className="result-date">
+                          {fixture.fixture?.date
+                            ? new Date(fixture.fixture.date).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                }
+                              )
+                            : ""}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-
-            <div className="result-vote">
-              {hasVoted ? (
-                <span className="result-vote-label">
-                  You voted: {myPred?.winner === 'home' ? homeName : awayName}
-                </span>
-              ) : (
-                <span className="result-vote-label result-vote-label--none">
-                  You voted: —
-                </span>
-              )}
-            </div>
-
-            {hasVoted && (
-              <div className="result-predicted-score">
-                Predicted Score: {myPred?.homeGoals} – {myPred?.awayGoals}
-              </div>
-            )}
-
-           <div className="result-footer">
-
-  {!hasVoted ? (
-
-    <span className="result-badge result-badge--none">
-      ⚪ Not Voted
-    </span>
-
-  ) : winnerCorrect ? (
-
-    <span className="result-badge result-badge--correct">
-
-      ✅ Winner Correct
-
-      {scoreCorrect && (
-        <div className="result-score-bonus">
-          🎯 Exact Score Bonus
-        </div>
-      )}
-
-      <span className="result-badge-points">
-        +{earnedPoints} Points
-      </span>
-
-    </span>
-
-  ) : (
-
-    <span className="result-badge result-badge--wrong">
-
-      ❌ Wrong
-
-      <span className="result-badge-points">
-        0 Points
-      </span>
-
-    </span>
-
-  )}
-
-  <span className="result-date">
-    {fixture.fixture?.date
-      ? new Date(fixture.fixture.date).toLocaleDateString(
-          "en-GB",
-          {
-            day: "numeric",
-            month: "short",
-          }
-        )
-      : ""}
-  </span>
-
-</div>
           </div>
         );
       })}

@@ -199,14 +199,25 @@ function isMatchRelevant(match) {
 
   if (isWomen) return false;
 
+  // Exclude PSL matches
+  if (name.includes("psl") || name.includes("pakistan super league")) {
+    return false;
+  }
+
   const isIndiaRelated = team1 === "india" || team1.includes("india ") || team1.includes(" india") || team1.startsWith("india") ||
                          team2 === "india" || team2.includes("india ") || team2.includes(" india") || team2.startsWith("india") ||
                          name.includes("india");
 
   const isIpl = name.includes("ipl") || name.includes("indian premier league");
-  const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup");
+  const isBbl = name.includes("bbl") || name.includes("big bash");
+  const isMlcMls = name.includes("mlc") || name.includes("mls") || name.includes("major league cricket");
+  const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup") || name.includes("champions trophy") || name.includes("wtc") || name.includes("world test championship") || name.includes("icc") || name.includes("asia cup");
 
-  return isIndiaRelated || isIpl || isWorldCup;
+  const isOtherMajor = name.includes("tour of") || name.includes("t20i") || name.includes("odi") || name.includes("test series") ||
+                       name.includes("sa20") || name.includes("cpl") || name.includes("caribbean premier league") ||
+                       name.includes("the hundred") || name.includes("ilt20") || name.includes("lpl") || name.includes("lanka premier league");
+
+  return isIndiaRelated || isIpl || isBbl || isMlcMls || isWorldCup || isOtherMajor;
 }
 
 async function fetchMatches() {
@@ -262,6 +273,20 @@ async function fetchMatches() {
       const matchInfo = match.matchInfo || match;
       const matchDate = matchInfo.startDate ? new Date(Number(matchInfo.startDate)) : new Date();
       if (isNaN(matchDate.getTime())) return false;
+
+      const state = (matchInfo.state || match.state || "").toLowerCase();
+      const statusText = matchInfo.status || match.status || "";
+      const isCompleted = state === "complete" ||
+                          statusText.toLowerCase().includes("won by") ||
+                          statusText.toLowerCase().includes("won the match") ||
+                          statusText.toLowerCase().includes("tied") ||
+                          statusText.toLowerCase().includes("draw") ||
+                          statusText.toLowerCase().includes("abandoned") ||
+                          statusText.toLowerCase().includes("no result");
+
+      if (isCompleted) {
+        return true; // Keep all completed matches returned by the API
+      }
 
       return matchDate >= oneWeekAgo && matchDate <= oneWeekHence;
     });
