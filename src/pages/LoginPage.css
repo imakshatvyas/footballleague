@@ -78,3 +78,51 @@
   border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
   animation: spin 0.7s linear infinite;
 }
+
+.login-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.login-forgot-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-orange);
+  cursor: pointer;
+  padding: 0;
+}
+.login-forgot-btn:hover {
+  text-decoration: underline;
+}
+.login-reset-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.login-reset-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.login-reset-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.login-back-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  margin-top: 8px;
+  transition: color var(--dur-fast);
+}
+.login-back-btn:hover {
+  color: var(--text-primary);
+}
+

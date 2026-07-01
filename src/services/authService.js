@@ -4,9 +4,14 @@ import {
   signOut,
   updateProfile,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
+
+export const sendPasswordReset = (email) =>
+  sendPasswordResetEmail(auth, email);
+
 
 export const registerUser = async (email, password, displayName) => {
   const cred = await createUserWithEmailAndPassword(auth, email, password);

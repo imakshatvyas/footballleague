@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser, registerUser } from '../services/authService';
+import { loginUser, registerUser, sendPasswordReset } from '../services/authService';
 import toast from 'react-hot-toast';
 import './LoginPage.css';
 
@@ -18,11 +18,17 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         await loginUser(email, password);
-      } else {
+        navigate('/');
+      } else if (mode === 'register') {
         if (!name.trim()) { toast.error('Enter your name'); return; }
         await registerUser(email, password, name.trim());
+        navigate('/');
+      } else if (mode === 'forgot') {
+        if (!email.trim()) { toast.error('Enter your email'); return; }
+        await sendPasswordReset(email.trim());
+        toast.success('Password reset email sent! Check your inbox.');
+        setMode('login');
       }
-      navigate('/');
     } catch (err) {
       toast.error(err.message?.replace('Firebase: ', '') || 'Something went wrong');
     } finally {
@@ -38,16 +44,23 @@ export default function LoginPage() {
         <h1 className="login-title">Prediction League</h1>
         <p className="login-sub">Compete with friends on every match</p>
 
-        <div className="login-toggle">
-          <button
-            className={`login-toggle-btn ${mode === 'login' ? 'active' : ''}`}
-            onClick={() => setMode('login')}
-          >Sign in</button>
-          <button
-            className={`login-toggle-btn ${mode === 'register' ? 'active' : ''}`}
-            onClick={() => setMode('register')}
-          >Create account</button>
-        </div>
+        {mode === 'forgot' ? (
+          <div className="login-reset-header">
+            <h2 className="login-reset-title">Reset Password</h2>
+            <p className="login-reset-sub">We will send a recovery link to your email</p>
+          </div>
+        ) : (
+          <div className="login-toggle">
+            <button
+              className={`login-toggle-btn ${mode === 'login' ? 'active' : ''}`}
+              onClick={() => setMode('login')}
+            >Sign in</button>
+            <button
+              className={`login-toggle-btn ${mode === 'register' ? 'active' : ''}`}
+              onClick={() => setMode('register')}
+            >Create account</button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           {mode === 'register' && (
@@ -76,23 +89,48 @@ export default function LoginPage() {
               autoComplete="email"
             />
           </div>
-          <div className="login-field">
-            <label className="login-label">Password</label>
-            <input
-              className="login-input"
-              type="password"
-              placeholder="At least 6 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            />
-          </div>
+          {mode !== 'forgot' && (
+            <div className="login-field">
+              <div className="login-label-row">
+                <label className="login-label">Password</label>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    className="login-forgot-btn"
+                    onClick={() => setMode('forgot')}
+                  >
+                    Forgot?
+                  </button>
+                )}
+              </div>
+              <input
+                className="login-input"
+                type="password"
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              />
+            </div>
+          )}
           <button className="login-submit" type="submit" disabled={loading}>
-            {loading ? <span className="login-spinner" /> : (mode === 'login' ? 'Sign in' : 'Create account')}
+            {loading ? <span className="login-spinner" /> : (
+              mode === 'forgot' ? 'Send reset link' : (mode === 'login' ? 'Sign in' : 'Create account')
+            )}
           </button>
+          {mode === 'forgot' && (
+            <button
+              type="button"
+              className="login-back-btn"
+              onClick={() => setMode('login')}
+            >
+              Back to sign in
+            </button>
+          )}
         </form>
       </div>
     </div>
   );
 }
+
