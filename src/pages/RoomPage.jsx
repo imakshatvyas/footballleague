@@ -98,7 +98,9 @@ export default function RoomPage() {
         setRoomPredictions(roomPredMap);
 
         const now = new Date();
-        const predictionCutoff = new Date(now.getTime() + 34 * 60 * 60 * 1000);
+        const predictionCutoff = new Date(
+          now.getTime() + (sport === "cricket" ? 8 * 24 * 60 * 60 * 1000 : 34 * 60 * 60 * 1000)
+        );
         const matches = (fixtureData || []).slice().sort(
           (a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date)
         );
@@ -535,33 +537,32 @@ const getCricketCategory = (match) => {
     return null;
   }
 
-  // 1. India Matches (Top Priority)
-  if (
-    homeTeam.includes("india") || 
-    awayTeam.includes("india") || 
-    seriesName.includes("india")
-  ) {
-    if (!homeTeam.includes("women") && !awayTeam.includes("women")) {
-      return "India Matches";
-    }
-  }
+  // Exclude minor bilateral series (vs Zimbabwe, Nepal, PNG, etc.)
+  const minorTeams = ["zimbabwe", "nepal", "papua new guinea", "png", "oman", "namibia", "usa", "uae", "netherlands"];
+  const isMinorBilateral = (seriesName.includes("tour of") || seriesName.includes("t20i") || seriesName.includes("odi")) &&
+    (minorTeams.some(t => seriesName.includes(t)) || minorTeams.some(t => homeTeam.includes(t) || awayTeam.includes(t)));
+  if (isMinorBilateral) return null;
 
-  // 2. IPL
+  // 1. IPL
   if (seriesName.includes("ipl") || seriesName.includes("indian premier league")) {
     return "IPL";
   }
 
-  // 3. BBL
-  if (seriesName.includes("bbl") || seriesName.includes("big bash")) {
-    return "BBL";
+  // 2. India Matches (bilateral tours — major & associate nations)
+  const indiaOpponents = ["england", "australia", "pakistan", "south africa", "new zealand",
+                          "west indies", "sri lanka", "bangladesh", "afghanistan", "ireland"];
+  const isIndia = homeTeam.includes("india") || awayTeam.includes("india") || seriesName.includes("india");
+  const isIndiaBilateral = isIndia && indiaOpponents.some(n => seriesName.includes(n) || homeTeam.includes(n) || awayTeam.includes(n));
+  if (isIndiaBilateral && !homeTeam.includes("women") && !awayTeam.includes("women")) {
+    return "India Matches";
   }
 
-  // 4. MLC / MLS
-  if (seriesName.includes("mlc") || seriesName.includes("mls") || seriesName.includes("major league cricket")) {
-    return "MLC / MLS";
+  // 3. MLC / Major League Cricket
+  if (seriesName.includes("mlc") || seriesName.includes("major league cricket")) {
+    return "MLC";
   }
 
-  // 5. World Cup & ICC Tournaments
+  // 4. World Cup & ICC Tournaments
   if (
     seriesName.includes("world cup") ||
     seriesName.includes("t20 world cup") ||
@@ -575,27 +576,15 @@ const getCricketCategory = (match) => {
     return "ICC Tournaments & World Cups";
   }
 
-  // 6. International & Other Major Leagues
+  // 5. Other 2026 domestic leagues
   const isMajorLeague =
-    seriesName.includes("cpl") || seriesName.includes("caribbean premier league") ||
     seriesName.includes("sa20") ||
+    seriesName.includes("cpl") || seriesName.includes("caribbean premier league") ||
     seriesName.includes("the hundred") ||
     seriesName.includes("ilt20") ||
-    seriesName.includes("lpl") ||
-    seriesName.includes("lanka premier league");
+    seriesName.includes("lpl") || seriesName.includes("lanka premier league");
 
-  const isBilateralInternational =
-    seriesName.includes("tour of") ||
-    seriesName.includes("t20i") ||
-    seriesName.includes("odi") ||
-    seriesName.includes("test series") ||
-    (match.raw && (
-      String(match.raw.matchFormat || "").toLowerCase().includes("t20") ||
-      String(match.raw.matchFormat || "").toLowerCase().includes("odi") ||
-      String(match.raw.matchFormat || "").toLowerCase().includes("test")
-    ));
-
-  if (isMajorLeague || isBilateralInternational) {
+  if (isMajorLeague) {
     return "International & Other Major Leagues";
   }
 
@@ -608,7 +597,7 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(() => {
     if (sport === 'cricket') {
-      return { 'India Matches': true };
+      return { 'IPL': true, 'India Matches': true };
     }
     return {};
   });
@@ -646,10 +635,9 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
 
   const categoryOrder = sport === 'cricket'
     ? [
-        "India Matches",
         "IPL",
-        "BBL",
-        "MLC / MLS",
+        "India Matches",
+        "MLC",
         "ICC Tournaments & World Cups",
         "International & Other Major Leagues"
       ]
@@ -695,10 +683,9 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
             >
               <div className="results-category-title">
                 <span className="results-category-icon">
-                  {cat === 'India Matches' ? '🇮🇳' :
-                   cat === 'IPL' ? '🏏' :
-                   cat === 'BBL' ? '🇦🇺' :
-                   cat === 'MLC / MLS' ? '🇺🇸' :
+                  {cat === 'IPL' ? '🏏' :
+                   cat === 'India Matches' ? '🇮🇳' :
+                   cat === 'MLC' ? '🇺🇸' :
                    cat === 'ICC Tournaments & World Cups' ? '🏆' : '🌍'}
                 </span>
                 <span className="results-category-name">{cat}</span>

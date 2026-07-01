@@ -199,25 +199,42 @@ function isMatchRelevant(match) {
 
   if (isWomen) return false;
 
-  // Exclude PSL matches
-  if (name.includes("psl") || name.includes("pakistan super league")) {
-    return false;
-  }
+  // Exclude PSL
+  if (name.includes("psl") || name.includes("pakistan super league")) return false;
 
-  const isIndiaRelated = team1 === "india" || team1.includes("india ") || team1.includes(" india") || team1.startsWith("india") ||
-                         team2 === "india" || team2.includes("india ") || team2.includes(" india") || team2.startsWith("india") ||
-                         name.includes("india");
+  // Exclude minor bilateral series (vs Zimbabwe, Nepal, PNG, etc.)
+  const minorTeams = ["zimbabwe", "nepal", "papua new guinea", "png", "oman", "namibia", "usa", "uae", "netherlands"];
+  const isMinorBilateral = (name.includes("tour of") || name.includes("t20i") || name.includes("odi")) &&
+    (minorTeams.some(t => name.includes(t)) || minorTeams.some(t => team1.includes(t) || team2.includes(t)));
+  if (isMinorBilateral) return false;
 
+  // IPL (always include)
   const isIpl = name.includes("ipl") || name.includes("indian premier league");
-  const isBbl = name.includes("bbl") || name.includes("big bash");
-  const isMlcMls = name.includes("mlc") || name.includes("mls") || name.includes("major league cricket");
-  const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup") || name.includes("champions trophy") || name.includes("wtc") || name.includes("world test championship") || name.includes("icc") || name.includes("asia cup");
+  if (isIpl) return true;
 
-  const isOtherMajor = name.includes("tour of") || name.includes("t20i") || name.includes("odi") || name.includes("test series") ||
-                       name.includes("sa20") || name.includes("cpl") || name.includes("caribbean premier league") ||
-                       name.includes("the hundred") || name.includes("ilt20") || name.includes("lpl") || name.includes("lanka premier league");
+  // ICC / World Cup events (always include)
+  const isWorldCup = name.includes("world cup") || name.includes("t20 world cup") || name.includes("odi world cup") ||
+                     name.includes("champions trophy") || name.includes("world test championship") ||
+                     name.includes("wtc") || name.includes("icc") || name.includes("asia cup");
+  if (isWorldCup) return true;
 
-  return isIndiaRelated || isIpl || isBbl || isMlcMls || isWorldCup || isOtherMajor;
+  // Major India bilateral — vs Test-playing nations + Ireland
+  const indiaOpponents = ["england", "australia", "pakistan", "south africa", "new zealand",
+                          "west indies", "sri lanka", "bangladesh", "afghanistan", "ireland"];
+  const isIndia = team1 === "india" || team1.startsWith("india ") || team1.includes(" india") ||
+                  team2 === "india" || team2.startsWith("india ") || team2.includes(" india") ||
+                  name.includes("india");
+  const isIndiaBilateral = isIndia && indiaOpponents.some(n => name.includes(n) || team1.includes(n) || team2.includes(n));
+  if (isIndiaBilateral) return true;
+
+  // 2026 domestic leagues (MLC, SA20, CPL, The Hundred, ILT20, LPL)
+  const is2026League = (name.includes("2026") || name.includes("2025-26") || name.includes("2026-27")) &&
+    (name.includes("mlc") || name.includes("major league cricket") ||
+     name.includes("sa20") || name.includes("cpl") || name.includes("caribbean premier league") ||
+     name.includes("the hundred") || name.includes("ilt20") || name.includes("lpl") || name.includes("lanka premier league"));
+  if (is2026League) return true;
+
+  return false;
 }
 
 async function fetchMatches() {
@@ -301,7 +318,7 @@ async function fetchMatches() {
 export async function getFixtures() {
   const fixtures = await fetchMatches();
   const now = new Date();
-  const cutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const cutoff = new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000);
 
   return fixtures
     .filter((match) => {
