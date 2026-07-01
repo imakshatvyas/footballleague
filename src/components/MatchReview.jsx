@@ -19,10 +19,12 @@ const getStatusIcon = (prediction, hasExactScore) => {
 };
 
 export default function MatchReview({ fixture, roomId, currentUserId, sport = 'football' }) {
+  const [expanded, setExpanded] = useState(false);
   const [review, setReview] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!expanded) return;
     let cancelled = false;
 
     const loadReview = async () => {
@@ -43,93 +45,104 @@ export default function MatchReview({ fixture, roomId, currentUserId, sport = 'f
     return () => {
       cancelled = true;
     };
-  }, [fixture, roomId, currentUserId, sport]);
-
-  if (loading) {
-    return (
-      <div className="match-review match-review--loading">
-        <ReviewStyles />
-        <div className="match-review-skeleton" />
-        <div className="match-review-skeleton match-review-skeleton--short" />
-      </div>
-    );
-  }
-
-  if (!review) return null;
-
-  const { teams, finalResult, summary, currentUserPrediction, predictions, hasExactScore } = review;
+  }, [expanded, fixture, roomId, currentUserId, sport]);
 
   return (
-    <section className="match-review">
+    <div className="match-review-wrapper">
       <ReviewStyles />
+      <button
+        type="button"
+        className={`match-review-toggle ${expanded ? 'match-review-toggle--expanded' : ''}`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {expanded ? 'Hide Review' : 'Review Predictions'}
+        <span className="match-review-toggle-arrow">
+          {expanded ? ' ▲' : ' ▼'}
+        </span>
+      </button>
 
-      <div className="match-review-header">
-        <span>Match Review</span>
-        <strong>Final Result</strong>
-        <p>
-          {teams.home}{' '}
-          {sport === 'cricket'
-            ? finalResult.label
-            : `${finalResult.homeScore}-${finalResult.awayScore}`}{' '}
-          {teams.away}
-        </p>
-      </div>
+      {expanded && (
+        <div className="match-review-content">
+          {loading ? (
+            <div className="match-review match-review--loading">
+              <div className="match-review-skeleton" />
+              <div className="match-review-skeleton match-review-skeleton--short" />
+            </div>
+          ) : !review ? (
+            <div className="match-review-empty-error">Failed to load match review.</div>
+          ) : (
+            <section className="match-review animate-fade-up">
+              <div className="match-review-header">
+                <span>Match Review</span>
+                <strong>Final Result</strong>
+                <p>
+                  {review.teams.home}{' '}
+                  {sport === 'cricket'
+                    ? review.finalResult.label
+                    : `${review.finalResult.homeScore}-${review.finalResult.awayScore}`}{' '}
+                  {review.teams.away}
+                </p>
+              </div>
 
-      <div className="match-review-summary">
-        <strong>Prediction Summary</strong>
-        <div className="match-review-count">{summary.totalPredictions} Predictions</div>
-        <div className="match-review-summary-row">
-          <span>{teams.home} Win</span>
-          <b>{summary.homePredictions}</b>
+              <div className="match-review-summary">
+                <strong>Prediction Summary</strong>
+                <div className="match-review-count">{review.summary.totalPredictions} Predictions</div>
+                <div className="match-review-summary-row">
+                  <span>{review.teams.home} Win</span>
+                  <b>{review.summary.homePredictions}</b>
+                </div>
+                {sport !== 'cricket' && (
+                  <div className="match-review-summary-row">
+                    <span>Draw</span>
+                    <b>{review.summary.drawPredictions}</b>
+                  </div>
+                )}
+                <div className="match-review-summary-row">
+                  <span>{review.teams.away} Win</span>
+                  <b>{review.summary.awayPredictions}</b>
+                </div>
+                {review.hasExactScore && (
+                  <div className="match-review-summary-row">
+                    <span>Exact score predictions</span>
+                    <b>{review.summary.exactScorePredictions}</b>
+                  </div>
+                )}
+              </div>
+
+              <div className="match-review-section">
+                <strong>Your Prediction</strong>
+                {review.currentUserPrediction ? (
+                  <PredictionReviewCard
+                    prediction={review.currentUserPrediction}
+                    hasExactScore={review.hasExactScore}
+                    isFeatured
+                  />
+                ) : (
+                  <div className="match-review-empty">You did not predict this match.</div>
+                )}
+              </div>
+
+              <div className="match-review-section">
+                <strong>Everyone's Predictions</strong>
+                {review.predictions.length ? (
+                  <div className="match-review-list">
+                    {review.predictions.map((prediction) => (
+                      <PredictionReviewCard
+                        key={prediction.id}
+                        prediction={prediction}
+                        hasExactScore={review.hasExactScore}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="match-review-empty">No predictions were submitted.</div>
+                )}
+              </div>
+            </section>
+          )}
         </div>
-        {sport !== 'cricket' && (
-          <div className="match-review-summary-row">
-            <span>Draw</span>
-            <b>{summary.drawPredictions}</b>
-          </div>
-        )}
-        <div className="match-review-summary-row">
-          <span>{teams.away} Win</span>
-          <b>{summary.awayPredictions}</b>
-        </div>
-        {hasExactScore && (
-          <div className="match-review-summary-row">
-            <span>Exact score predictions</span>
-            <b>{summary.exactScorePredictions}</b>
-          </div>
-        )}
-      </div>
-
-      <div className="match-review-section">
-        <strong>Your Prediction</strong>
-        {currentUserPrediction ? (
-          <PredictionReviewCard
-            prediction={currentUserPrediction}
-            hasExactScore={hasExactScore}
-            isFeatured
-          />
-        ) : (
-          <div className="match-review-empty">You did not predict this match.</div>
-        )}
-      </div>
-
-      <div className="match-review-section">
-        <strong>Everyone's Predictions</strong>
-        {predictions.length ? (
-          <div className="match-review-list">
-            {predictions.map((prediction) => (
-              <PredictionReviewCard
-                key={prediction.id}
-                prediction={prediction}
-                hasExactScore={hasExactScore}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="match-review-empty">No predictions were submitted.</div>
-        )}
-      </div>
-    </section>
+      )}
+    </div>
   );
 }
 
@@ -155,9 +168,58 @@ function PredictionReviewCard({ prediction, hasExactScore, isFeatured = false })
 function ReviewStyles() {
   return (
     <style>{`
-      .match-review {
+      .match-review-wrapper {
         margin-top: 14px;
-        padding-top: 14px;
+        width: 100%;
+      }
+
+      .match-review-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background: transparent;
+        border: 1px solid rgba(255, 90, 0, 0.4);
+        color: var(--color-orange);
+        padding: 8px 16px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--dur-fast) var(--ease-out);
+      }
+
+      .match-review-toggle:hover {
+        background: rgba(255, 90, 0, 0.08);
+        border-color: var(--color-orange);
+      }
+
+      .match-review-toggle--expanded {
+        border-color: rgba(255, 255, 255, 0.15);
+        color: var(--text-secondary);
+      }
+
+      .match-review-toggle--expanded:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .match-review-toggle-arrow {
+        font-size: 10px;
+        opacity: 0.8;
+      }
+
+      .match-review-empty-error {
+        padding: 12px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .match-review {
+        margin-top: 12px;
+        padding-top: 12px;
         border-top: 0.5px solid rgba(255, 255, 255, 0.08);
       }
 
