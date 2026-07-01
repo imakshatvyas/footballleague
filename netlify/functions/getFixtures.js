@@ -190,34 +190,6 @@ const MOCK_CRICKET_MATCHES = [
   },
 
   // ══════════════════════════════════════════════════════
-  // ── COMPLETE: India tour of England 2026 ──
-  // ══════════════════════════════════════════════════════
-  {
-    matchId: 129390, seriesId: 10532, seriesName: "India tour of England, 2026",
-    matchDesc: "5th Test", matchFormat: "TEST",
-    startDate: "1782630000000", endDate: "1782975600000",
-    state: "Complete", status: "India won by 150 runs",
-    team1: { teamId: 9, teamName: "England", teamSName: "ENG", imageId: 776237 },
-    team2: { teamId: 2, teamName: "India", teamSName: "IND", imageId: 776162 },
-    matchScore: {
-      team1Score: { inngs1: { runs: 280, wickets: 10, overs: 85.4 }, inngs2: { runs: 220, wickets: 10, overs: 70.2 } },
-      team2Score: { inngs1: { runs: 350, wickets: 10, overs: 92.1 }, inngs2: { runs: 300, wickets: 5, overs: 80.0 } }
-    }
-  },
-  {
-    matchId: 129389, seriesId: 10532, seriesName: "India tour of England, 2026",
-    matchDesc: "4th Test", matchFormat: "TEST",
-    startDate: "1782111600000", endDate: "1782457200000",
-    state: "Complete", status: "England won by 5 wickets",
-    team1: { teamId: 9, teamName: "England", teamSName: "ENG", imageId: 776237 },
-    team2: { teamId: 2, teamName: "India", teamSName: "IND", imageId: 776162 },
-    matchScore: {
-      team1Score: { inngs1: { runs: 310, wickets: 10, overs: 89.2 }, inngs2: { runs: 245, wickets: 5, overs: 65.4 } },
-      team2Score: { inngs1: { runs: 290, wickets: 10, overs: 82.1 }, inngs2: { runs: 260, wickets: 10, overs: 78.5 } }
-    }
-  },
-
-  // ══════════════════════════════════════════════════════
   // ── COMPLETE: India tour of Ireland 2026 — Ireland won! ──
   // ══════════════════════════════════════════════════════
   {
