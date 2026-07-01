@@ -2,6 +2,7 @@ import { getSportService } from "./sports/sportResolver";
 
 export const savePrediction = async (
   userId,
+  displayName,
   roomId,
   fixtureId,
   outcome,
@@ -10,7 +11,18 @@ export const savePrediction = async (
   sport = "football"
 ) => {
   const service = getSportService(sport);
-  return service.savePrediction(userId, roomId, fixtureId, outcome, homeGoals, awayGoals);
+  if (sport === "cricket") {
+    return service.savePrediction(userId, roomId, fixtureId, outcome);
+  }
+  return service.savePrediction(
+    userId,
+    displayName,
+    roomId,
+    fixtureId,
+    outcome,
+    homeGoals,
+    awayGoals
+  );
 };
 
 export const getUserPredictions = async (userId, roomId, sport = "football") => {

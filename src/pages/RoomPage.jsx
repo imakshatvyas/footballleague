@@ -168,6 +168,7 @@ const handlePredict = useCallback(
     try {
       await savePrediction(
         user.uid,
+        user.displayName || 'You',
         roomId,
         fixtureId,
         outcome,
