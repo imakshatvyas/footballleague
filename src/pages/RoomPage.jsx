@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,8 @@ import MiniLeaderboard from '../components/MiniLeaderboard';
 import ProgressCard from '../components/ProgressCard';
 import RoomInfoSheet from '../components/RoomInfoSheet';
 import ChatWindow from '../components/Chat/ChatWindow';
+import MatchReview from '../components/MatchReview';
+import CricketFilterBar, { filterCricketFixtures } from '../components/CricketFilterBar';
 import './RoomPage.css';
 
 const TABS = ['Predict', 'Standings', 'Results', 'Members', 'Chat'];
@@ -23,8 +25,10 @@ export default function RoomPage() {
 
   const [room,        setRoom]        = useState(null);
   const [fixtures,    setFixtures]    = useState([]);
+  const [allFixtures, setAllFixtures] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [roomPredictions, setRoomPredictions] = useState({});
+  const [allRoomPredictions, setAllRoomPredictions] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [members,     setMembers]     = useState([]);
   const [liveMatch,   setLiveMatch]   = useState(null);
@@ -64,6 +68,7 @@ export default function RoomPage() {
         setRoom(roomData);
         setLeaderboard(lbData || []);
         setMembers(memberData || []);
+        setAllRoomPredictions(roomPredData || []);
 
         const predMap = {};
         (predData || []).forEach((p) => {
@@ -127,6 +132,7 @@ export default function RoomPage() {
 
         setLiveMatch(live || null);
         setNextMatch(next || null);
+        setAllFixtures(matches);
         setFixtures(activeFixtures);
       } finally {
         if (!cancelled) {
@@ -198,6 +204,27 @@ const handlePredict = useCallback(
           ],
         };
       });
+
+      setAllRoomPredictions((current) => {
+        const fixtureKey = String(fixtureId);
+        const nextPrediction = {
+          userId: user.uid,
+          displayName: user.displayName || 'You',
+          roomId,
+          fixtureId: fixtureKey,
+          prediction: outcome,
+          predictedHomeGoals,
+          predictedAwayGoals,
+        };
+
+        return [
+          ...(current || []).filter(
+            (prediction) =>
+              !(prediction.userId === user.uid && String(prediction.fixtureId) === fixtureKey)
+          ),
+          nextPrediction,
+        ];
+      });
     } finally {
       setSaving((s) => ({
         ...s,
@@ -219,12 +246,19 @@ const handlePredict = useCallback(
     }
   }, [navigate, roomId, user]);
 
+  const sport = room?.sport || 'football';
+  const isCricketRoom = sport === 'cricket';
+  const displayedFixtures = useMemo(
+    () => (isCricketRoom ? filterCricketFixtures(fixtures, competitionFilter) : fixtures),
+    [competitionFilter, fixtures, isCricketRoom]
+  );
+
   // ── Hero fixture = live first, then next upcoming ──
   const heroFixture = liveMatch || nextMatch;
   const heroPrediction = heroFixture ? predictions[String(heroFixture.fixture.id)] : null;
 
   // ── Prediction count stats ──────────────────────────
-  const openFixtures = fixtures.filter(f => f.fixture?.status?.short === 'NS' && new Date(f.fixture?.date) > new Date());
+  const openFixtures = displayedFixtures.filter(f => f.fixture?.status?.short === 'NS' && new Date(f.fixture?.date) > new Date());
   const totalFixtures  = openFixtures.length;
   const predCount      = openFixtures.filter(f => predictions[String(f.fixture.id)]).length;
 
@@ -240,7 +274,7 @@ const handlePredict = useCallback(
         memberCount={members.length}
         userPrediction={heroPrediction}
         onOpenRoomInfo={() => setInfoOpen(true)}
-        sport={room?.sport || 'football'}
+        sport={sport}
       />
 
       <RoomInfoSheet
@@ -276,26 +310,19 @@ const handlePredict = useCallback(
             )}
             <ProgressCard completed={predCount} total={totalFixtures} />
 
-            {/* Competition filter sub-tabs for cricket */}
-            {(room?.sport || 'football') === 'cricket' && fixtures.length > 0 && (
-              <div className="predict-competition-tabs">
-                {['All', 'India', 'IPL', 'MLC'].map(comp => (
-                  <button
-                    key={comp}
-                    className={`predict-comp-tab ${competitionFilter === comp ? 'predict-comp-tab--active' : ''}`}
-                    onClick={() => setCompetitionFilter(comp)}
-                  >
-                    {comp === 'India' ? '🇮🇳 ' : comp === 'IPL' ? '🏏 ' : comp === 'MLC' ? '🏟️ ' : '🌍 '}{comp}
-                  </button>
-                ))}
-              </div>
+            {isCricketRoom && fixtures.length > 0 && (
+              <CricketFilterBar
+                fixtures={fixtures}
+                selectedFilter={competitionFilter}
+                onChange={setCompetitionFilter}
+              />
             )}
 
-            {fixtures.length === 0 ? (
+            {displayedFixtures.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state__icon">📅</div>
                 <div className="empty-state__title">No live or upcoming fixtures</div>
-                <div className="empty-state__subtitle">Check back soon — new matches will appear here automatically.</div>
+                <div className="empty-state__subtitle">Check another filter or come back soon.</div>
               </div>
             ) : (
               <>
@@ -303,17 +330,7 @@ const handlePredict = useCallback(
                   Live and upcoming matches
                 </p>
                 <div className="prediction-list">
-                  {fixtures
-                    .filter(fixture => {
-                      if ((room?.sport || 'football') !== 'cricket') return true;
-                      if (competitionFilter === 'All') return true;
-                      const series = (fixture.league?.name || '').toLowerCase();
-                      if (competitionFilter === 'India') return series.includes('india') && !series.includes('indian premier league') && !series.includes('ipl');
-                      if (competitionFilter === 'IPL') return series.includes('indian premier league') || series.includes('ipl');
-                      if (competitionFilter === 'MLC') return series.includes('major league cricket') || series.includes('mlc');
-                      return true;
-                    })
-                    .map((fixture, i) => (
+                  {displayedFixtures.map((fixture, i) => (
                     <PredictionCard
                       key={fixture.fixture.id}
                       fixture={fixture}
@@ -322,7 +339,7 @@ const handlePredict = useCallback(
                       onPredict={handlePredict}
                       animationDelay={i * 60}
                       roomPredictions={roomPredictions[String(fixture.fixture.id)] || []}
-                      sport={room?.sport || 'football'}
+                      sport={sport}
                     />
                   ))}
                 </div>
@@ -345,7 +362,16 @@ const handlePredict = useCallback(
         )}
 
         {tab === 'Results' && (
-          <RecentResults roomId={roomId} currentUserId={user.uid} predictions={predictions} sport={room?.sport || 'football'} />
+          <RecentResults
+            roomId={roomId}
+            currentUserId={user.uid}
+            predictions={predictions}
+            sport={sport}
+            fixtures={allFixtures}
+            selectedFilter={competitionFilter}
+            onFilterChange={setCompetitionFilter}
+            roomPredictions={allRoomPredictions}
+          />
         )}
 
         {tab === 'Members' && (
@@ -806,6 +832,12 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
               )}
               <span className="result-date">{matchDate}</span>
             </div>
+            <MatchReview
+              fixture={fixture}
+              roomId={roomId}
+              currentUserId={currentUserId}
+              sport={sport}
+            />
           </div>
         );
       })}
@@ -891,3 +923,4 @@ function ResultsSkeleton() {
     </div>
   );
 }
+

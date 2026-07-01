@@ -11,6 +11,7 @@ import { db } from "../../firebase";
 
 export const savePrediction = async (
   userId,
+  displayName,
   roomId,
   fixtureId,
   outcome,
@@ -23,13 +24,13 @@ export const savePrediction = async (
     doc(db, "predictions", id),
     {
       userId,
+      displayName,
+
       roomId,
       fixtureId: String(fixtureId),
 
-      // Winner prediction
       prediction: outcome,
 
-      // Scoreline prediction
       predictedHomeGoals: Number(homeGoals),
       predictedAwayGoals: Number(awayGoals),
 
@@ -47,7 +48,11 @@ export const getUserPredictions = async (userId, roomId) => {
   );
 
   const snap = await getDocs(q);
-  return snap.docs.map((doc) => doc.data());
+
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 };
 
 export const getRoomPredictions = async (roomId) => {
@@ -57,5 +62,9 @@ export const getRoomPredictions = async (roomId) => {
   );
 
   const snap = await getDocs(q);
-  return snap.docs.map((doc) => doc.data());
+
+  return snap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 };
