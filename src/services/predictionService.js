@@ -8,7 +8,8 @@ export const savePrediction = async (
   outcome,
   homeGoals = 0,
   awayGoals = 0,
-  sport = "football"
+  sport = "football",
+  extraTimeWinner = null
 ) => {
   const service = getSportService(sport);
   if (sport === "cricket") {
@@ -21,7 +22,8 @@ export const savePrediction = async (
     fixtureId,
     outcome,
     homeGoals,
-    awayGoals
+    awayGoals,
+    extraTimeWinner
   );
 };
 

@@ -76,6 +76,7 @@ export default function RoomPage() {
             winner: p.prediction,
             homeGoals: p.predictedHomeGoals ?? 0,
             awayGoals: p.predictedAwayGoals ?? 0,
+            extraTimeWinner: p.extraTimeWinner || null,
           };
         });
         setPredictions(predMap);
@@ -99,6 +100,7 @@ export default function RoomPage() {
             winner: prediction.prediction,
             homeGoals: prediction.predictedHomeGoals ?? 0,
             awayGoals: prediction.predictedAwayGoals ?? 0,
+            extraTimeWinner: prediction.extraTimeWinner || null,
           });
         });
         setRoomPredictions(roomPredMap);
@@ -156,7 +158,8 @@ const handlePredict = useCallback(
     fixtureId,
     outcome,
     predictedHomeGoals,
-    predictedAwayGoals
+    predictedAwayGoals,
+    extraTimeWinner = null
   ) => {
     setSaving((s) => ({
       ...s,
@@ -174,7 +177,8 @@ const handlePredict = useCallback(
         outcome,
         predictedHomeGoals,
         predictedAwayGoals,
-        sport
+        sport,
+        extraTimeWinner
       );
 
       setPredictions((p) => ({
@@ -183,6 +187,7 @@ const handlePredict = useCallback(
           winner: outcome,
           homeGoals: predictedHomeGoals,
           awayGoals: predictedAwayGoals,
+          extraTimeWinner: extraTimeWinner,
         },
       }));
 
@@ -195,6 +200,7 @@ const handlePredict = useCallback(
           winner: outcome,
           homeGoals: predictedHomeGoals,
           awayGoals: predictedAwayGoals,
+          extraTimeWinner: extraTimeWinner,
         };
 
         return {
@@ -216,6 +222,7 @@ const handlePredict = useCallback(
           prediction: outcome,
           predictedHomeGoals,
           predictedAwayGoals,
+          extraTimeWinner: extraTimeWinner,
         };
 
         return [
@@ -400,9 +407,43 @@ function FullLeaderboard({ entries, currentUserId }) {
     );
   }
 
-  const top3 = entries.slice(0, 3);
-  const totalPoints = entries.reduce((sum, entry) => sum + Number(entry.points || 0), 0);
-  const totalPredictions = entries.reduce((sum, entry) => sum + Number(entry.totalPredictions || 0), 0);
+  const leaderboardSorted = [...entries];
+  const currentLeader = leaderboardSorted[0] || null;
+
+  // Find longest active streak
+  let streakLeader = null;
+  let longestStreak = -1;
+  entries.forEach((e) => {
+    const streak = Number(e.currentStreak || 0);
+    if (streak > longestStreak) {
+      longestStreak = streak;
+      streakLeader = e;
+    }
+  });
+
+  // Find Exact Score Leader (Football) / Best Accuracy (Cricket)
+  let specialLeader = null;
+  let specialVal = -1;
+  const isCricket = entries.some(e => e.exactScoreAccuracy === 0 && e.accuracy > 0 && e.totalPredictions > 0); // fallback check if no sport parameter is explicitly passed to FullLeaderboard
+  
+  if (isCricket) {
+    entries.forEach((e) => {
+      const acc = Number(e.accuracy || 0);
+      if (acc > specialVal) {
+        specialVal = acc;
+        specialLeader = e;
+      }
+    });
+  } else {
+    entries.forEach((e) => {
+      const exacts = Number(e.exactScorePredictions || 0);
+      if (exacts > specialVal) {
+        specialVal = exacts;
+        specialLeader = e;
+      }
+    });
+  }
+
   const roomAccuracy = entries.length
     ? Math.round(entries.reduce((sum, entry) => sum + Number(entry.accuracy || 0), 0) / entries.length)
     : 0;
@@ -419,21 +460,30 @@ function FullLeaderboard({ entries, currentUserId }) {
 
       <div className="leaderboard-summary">
         <div className="leaderboard-summary-card">
-          <strong>{entries.length}</strong>
-          <span>Total players</span>
+          <strong>{currentLeader ? currentLeader.displayName : '—'}</strong>
+          <span>🏆 Current Leader {currentLeader ? `· ${currentLeader.points} pts` : ''}</span>
         </div>
         <div className="leaderboard-summary-card">
-          <strong>{totalPredictions}</strong>
-          <span>Total predictions</span>
+          <strong>{streakLeader && longestStreak > 0 ? streakLeader.displayName : '—'}</strong>
+          <span>🔥 Longest Streak {streakLeader && longestStreak > 0 ? `· ${longestStreak} Correct` : ''}</span>
         </div>
-        <div className="leaderboard-summary-card leaderboard-summary-card--wide">
-          <strong>{totalPoints}</strong>
-          <span>Room points · {roomAccuracy}% average accuracy</span>
+        <div className="leaderboard-summary-card">
+          <strong>{specialLeader && specialVal > 0 ? specialLeader.displayName : '—'}</strong>
+          <span>
+            {isCricket 
+              ? `🏏 Best Accuracy ${specialLeader && specialVal > 0 ? `· ${specialVal}%` : ''}`
+              : `🎯 Exact Score Leader ${specialLeader && specialVal > 0 ? `· ${specialVal} Exact` : ''}`
+            }
+          </span>
+        </div>
+        <div className="leaderboard-summary-card">
+          <strong>{roomAccuracy}%</strong>
+          <span>📈 Room Accuracy · Average prediction accuracy</span>
         </div>
       </div>
 
       <div className="top-player-grid">
-        {top3.map((entry, index) => (
+        {entries.slice(0, 3).map((entry, index) => (
           <div
             key={entry.userId}
             className={`top-player-card ${index === 0 ? 'top-player-card--first' : ''} ${entry.userId === currentUserId ? 'top-player-card--you' : ''}`}
@@ -745,8 +795,8 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
         const awayName   = fixture.teams?.away?.name;
         const homeSName  = fixture.teams?.home?.shortName;
         const awaySName  = fixture.teams?.away?.shortName;
-        const myPred = predictions[fid];
-        const hasVoted = myPred?.winner === 'home' || myPred?.winner === 'away';
+        const myPred = predictions[String(fid)];
+        const hasVoted = myPred?.winner === 'home' || myPred?.winner === 'away' || myPred?.winner === 'draw';
         const winnerCorrect = hasVoted && myPred?.winner === outcome;
         const displayHomeScore = isCricket ? (fixture.scoreDisplay?.homeScore || '—') : homeGoals;
         const displayAwayScore = isCricket ? (fixture.scoreDisplay?.awayScore || '—') : awayGoals;
@@ -805,7 +855,9 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
 
             <div className="result-vote">
               {hasVoted ? (
-                <span className="result-vote-label">You voted: {myPred?.winner === 'home' ? homeName : awayName}</span>
+                <span className="result-vote-label">
+                  You voted: {myPred?.winner === 'home' ? homeName : myPred?.winner === 'away' ? awayName : 'Draw'}
+                </span>
               ) : (
                 <span className="result-vote-label result-vote-label--none">You voted: —</span>
               )}

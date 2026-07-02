@@ -231,12 +231,23 @@ export const getRoomLeaderboard = async (roomId) => {
 
     const actualWinner = match.actualWinner || getWinnerFromScore(match);
     const predictedWinner = prediction.prediction;
-    const hasCorrectWinner =
-      (predictedWinner === "home" || predictedWinner === "away" || predictedWinner === "draw") &&
-      predictedWinner === actualWinner;
-
+    
+    // Knockout logic: regular time draw can have an extraTimeWinner prediction
+    let hasCorrectWinner = false;
     const predictedHomeGoals = toNumber(prediction.predictedHomeGoals);
     const predictedAwayGoals = toNumber(prediction.predictedAwayGoals);
+    
+    if (predictedWinner === "draw" && actualWinner === "draw") {
+      // If regular time finished draw, match.actualWinner might still be resolved to a winner via penalties or extra time
+      // Check the decisive winner (penalties/extra time winner) or other API indicators
+      const decisiveWinner = getActualWinner(match.raw || match);
+      hasCorrectWinner = (decisiveWinner === "draw" || prediction.extraTimeWinner === decisiveWinner);
+    } else {
+      hasCorrectWinner =
+        (predictedWinner === "home" || predictedWinner === "away" || predictedWinner === "draw") &&
+        predictedWinner === actualWinner;
+    }
+
     const hasExactScore =
       hasCorrectWinner &&
       predictedHomeGoals === match.homeGoals && predictedAwayGoals === match.awayGoals;

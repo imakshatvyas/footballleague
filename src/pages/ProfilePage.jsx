@@ -51,7 +51,11 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savingTeam, setSavingTeam] = useState(false);
-  const [activeTab, setActiveTab] = useState('overall');
+  const [activeTab, setActiveTab] = useState('football');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [modalSportFilter, setModalSportFilter] = useState('all');
+  const [modalPage, setModalPage] = useState(1);
+  const modalPageSize = 10;
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -96,7 +100,7 @@ export default function ProfilePage() {
 
   const statCards = useMemo(() => {
     const cards = [
-      { label: 'Total Predictions', value: activeStats?.totalPredictions ?? 0 },
+      { label: 'Completed Predictions', value: activeStats?.scoredPredictions ?? 0 },
       { label: 'Correct Winners', value: activeStats?.correctWinnerPredictions ?? 0 },
     ];
     if (activeTab !== 'cricket') {
@@ -110,6 +114,28 @@ export default function ProfilePage() {
     );
     return cards;
   }, [activeStats, activeTab]);
+
+  const completedHistory = useMemo(() => {
+    return history.filter((p) => p.isFinished);
+  }, [history]);
+
+  const displayedHistory = useMemo(() => {
+    return completedHistory.slice(0, 4);
+  }, [completedHistory]);
+
+  const filteredModalHistory = useMemo(() => {
+    if (modalSportFilter === 'all') return completedHistory;
+    return completedHistory.filter((p) => p.sport === modalSportFilter);
+  }, [completedHistory, modalSportFilter]);
+
+  const paginatedModalHistory = useMemo(() => {
+    const start = (modalPage - 1) * modalPageSize;
+    return filteredModalHistory.slice(start, start + modalPageSize);
+  }, [filteredModalHistory, modalPage]);
+
+  const totalModalPages = useMemo(() => {
+    return Math.ceil(filteredModalHistory.length / modalPageSize) || 1;
+  }, [filteredModalHistory]);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -184,13 +210,6 @@ export default function ProfilePage() {
         <div className="profile-stats-header">
           <p className="section-label">Prediction statistics</p>
           <div className="stats-tabs">
-            <button
-              className={`stats-tab ${activeTab === 'overall' ? 'stats-tab--active' : ''}`}
-              onClick={() => setActiveTab('overall')}
-              type="button"
-            >
-              Overall
-            </button>
             <button
               className={`stats-tab ${activeTab === 'football' ? 'stats-tab--active' : ''}`}
               onClick={() => setActiveTab('football')}
@@ -280,10 +299,10 @@ export default function ProfilePage() {
       <section className="profile-section">
         <p className="section-label">Prediction history</p>
         <div className="history-list">
-          {history.length === 0 ? (
-            <div className="profile-empty">No predictions yet</div>
+          {displayedHistory.length === 0 ? (
+            <div className="profile-empty">No completed predictions yet</div>
           ) : (
-            history.map((prediction) => (
+            displayedHistory.map((prediction) => (
               <div className="history-card" key={prediction.id}>
                 <div className="history-top">
                   <strong>{prediction.fixture}</strong>
@@ -303,20 +322,16 @@ export default function ProfilePage() {
                 <div className="history-bottom">
                   <span
                     className={`history-badge ${
-                      prediction.isFinished
-                        ? prediction.correctWinner
-                          ? 'history-badge--correct'
-                          : 'history-badge--wrong'
-                        : 'history-badge--pending'
+                      prediction.correctWinner
+                        ? 'history-badge--correct'
+                        : 'history-badge--wrong'
                     }`}
                   >
-                    {!prediction.isFinished
-                      ? 'Pending'
-                      : prediction.correctWinner
-                        ? prediction.exactScore
-                          ? 'Exact score'
-                          : 'Winner correct'
-                        : 'Incorrect'}
+                    {prediction.correctWinner
+                      ? prediction.exactScore
+                        ? 'Exact score'
+                        : 'Winner correct'
+                      : 'Incorrect'}
                   </span>
                   <strong>{formatPoints(prediction.points)} pts</strong>
                 </div>
@@ -324,7 +339,109 @@ export default function ProfilePage() {
             ))
           )}
         </div>
+        {completedHistory.length > 4 && (
+          <button
+            className="view-all-predictions-btn"
+            onClick={() => {
+              setModalSportFilter('all');
+              setModalPage(1);
+              setShowHistoryModal(true);
+            }}
+          >
+            View All Predictions →
+          </button>
+        )}
       </section>
+
+      {showHistoryModal && (
+        <div className="history-modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="history-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="history-modal-header">
+              <h2>Prediction History</h2>
+              <button className="history-modal-close" onClick={() => setShowHistoryModal(false)}>×</button>
+            </div>
+            
+            <div className="history-modal-filters">
+              <button
+                className={`modal-filter-btn ${modalSportFilter === 'all' ? 'active' : ''}`}
+                onClick={() => { setModalSportFilter('all'); setModalPage(1); }}
+              >
+                All
+              </button>
+              <button
+                className={`modal-filter-btn ${modalSportFilter === 'football' ? 'active' : ''}`}
+                onClick={() => { setModalSportFilter('football'); setModalPage(1); }}
+              >
+                ⚽ Football
+              </button>
+              <button
+                className={`modal-filter-btn ${modalSportFilter === 'cricket' ? 'active' : ''}`}
+                onClick={() => { setModalSportFilter('cricket'); setModalPage(1); }}
+              >
+                🏏 Cricket
+              </button>
+            </div>
+
+            <div className="history-modal-list">
+              {paginatedModalHistory.length === 0 ? (
+                <div className="profile-empty">No predictions found</div>
+              ) : (
+                paginatedModalHistory.map((prediction) => (
+                  <div className="history-card" key={prediction.id}>
+                    <div className="history-top">
+                      <strong>{prediction.fixture}</strong>
+                      <span className="history-sport-badge">{prediction.sport}</span>
+                      <span>{formatDate(prediction.date)}</span>
+                    </div>
+                    <div className="history-score">
+                      <span>
+                        Predicted {prediction.predictedHomeGoals}-{prediction.predictedAwayGoals}
+                      </span>
+                      <span>
+                        Actual {prediction.actualHomeGoals}-{prediction.actualAwayGoals}
+                      </span>
+                    </div>
+                    <div className="history-bottom">
+                      <span
+                        className={`history-badge ${
+                          prediction.correctWinner
+                            ? 'history-badge--correct'
+                            : 'history-badge--wrong'
+                        }`}
+                      >
+                        {prediction.correctWinner
+                          ? prediction.exactScore
+                            ? 'Exact score'
+                            : 'Winner correct'
+                          : 'Incorrect'}
+                      </span>
+                      <strong>{formatPoints(prediction.points)} pts</strong>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {totalModalPages > 1 && (
+              <div className="history-modal-pagination">
+                <button
+                  disabled={modalPage === 1}
+                  onClick={() => setModalPage((p) => Math.max(1, p - 1))}
+                >
+                  ← Prev
+                </button>
+                <span>Page {modalPage} of {totalModalPages}</span>
+                <button
+                  disabled={modalPage === totalModalPages}
+                  onClick={() => setModalPage((p) => Math.min(totalModalPages, p + 1))}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <section className="profile-section">
         <p className="section-label">Account</p>

@@ -177,12 +177,14 @@ export default function PredictionCard({
   const [selectedWinner, setSelectedWinner] = useState(null);
   const [homeGoals, setHomeGoals] = useState(0);
   const [awayGoals, setAwayGoals] = useState(0);
+  const [extraTimeWinner, setExtraTimeWinner] = useState(null);
 
   useEffect(() => {
     if (!selected) {
       setSelectedWinner(null);
       setHomeGoals(0);
       setAwayGoals(0);
+      setExtraTimeWinner(null);
       return;
     }
 
@@ -197,6 +199,7 @@ export default function PredictionCard({
     }
 
     setSelectedWinner(selected.winner || null);
+    setExtraTimeWinner(selected.extraTimeWinner || null);
     if (config.hasScorePrediction) {
       const score = getInitialScore(
         selected.winner,
@@ -208,20 +211,23 @@ export default function PredictionCard({
     }
   }, [selected, config.hasScorePrediction]);
 
-  const scoreWinner = useMemo(
-    () => getScoreWinner(homeGoals, awayGoals),
-    [homeGoals, awayGoals]
-  );
+  const scoreWinner = useMemo(() => {
+    if (sport === "football" && homeGoals === awayGoals) {
+      return "draw";
+    }
+    return getScoreWinner(homeGoals, awayGoals);
+  }, [homeGoals, awayGoals, sport]);
 
   const scoreMatchesWinner = selectedWinner && selectedWinner === scoreWinner;
-  const canSave = Boolean(selectedWinner && scoreMatchesWinner && !locked && !saving);
+  const canSave = Boolean(selectedWinner && scoreMatchesWinner && !locked && !saving && (scoreWinner !== "draw" || extraTimeWinner));
   const isSaved =
     typeof selected === "string"
       ? selected === selectedWinner
       : selected?.winner === selectedWinner &&
         (config.hasScorePrediction
           ? Number(selected?.homeGoals ?? 0) === homeGoals &&
-            Number(selected?.awayGoals ?? 0) === awayGoals
+            Number(selected?.awayGoals ?? 0) === awayGoals &&
+            selected?.extraTimeWinner === extraTimeWinner
           : true);
 
   const handleSelectWinner = (team) => {
@@ -247,17 +253,34 @@ export default function PredictionCard({
   const handleGoalChange = (team, delta) => {
     if (locked || saving) return;
 
+    let nextHome = homeGoals;
+    let nextAway = awayGoals;
+
     if (team === "home") {
-      setHomeGoals((value) => Math.max(0, value + delta));
-      return;
+      nextHome = Math.max(0, homeGoals + delta);
+      setHomeGoals(nextHome);
+    } else {
+      nextAway = Math.max(0, awayGoals + delta);
+      setAwayGoals(nextAway);
     }
 
-    setAwayGoals((value) => Math.max(0, value + delta));
+    if (sport === "football") {
+      if (nextHome > nextAway) {
+        setSelectedWinner("home");
+        setExtraTimeWinner(null);
+      } else if (nextAway > nextHome) {
+        setSelectedWinner("away");
+        setExtraTimeWinner(null);
+      } else {
+        // For football draw score, set selectedWinner to "draw"
+        setSelectedWinner("draw");
+      }
+    }
   };
 
   const handleSave = () => {
     if (!canSave) return;
-    onPredict(fixtureId, selectedWinner, homeGoals, awayGoals);
+    onPredict(fixtureId, selectedWinner, homeGoals, awayGoals, extraTimeWinner);
   };
 
   return (
@@ -393,9 +416,39 @@ export default function PredictionCard({
             </div>
           </div>
 
+          {sport === "football" && homeGoals === awayGoals && (
+            <div className="pred-extra-time-section">
+              <p className="pred-extra-time-title">If the match finishes level after 90 minutes:</p>
+              <div className="pred-extra-time-options">
+                <label className="pred-extra-time-option">
+                  <input
+                    type="radio"
+                    name={`extraTimeWinner_${fixtureId}`}
+                    value="home"
+                    checked={extraTimeWinner === "home"}
+                    onChange={() => setExtraTimeWinner("home")}
+                    disabled={saving}
+                  />
+                  <span>{home?.name} wins after Extra Time / Penalties</span>
+                </label>
+                <label className="pred-extra-time-option">
+                  <input
+                    type="radio"
+                    name={`extraTimeWinner_${fixtureId}`}
+                    value="away"
+                    checked={extraTimeWinner === "away"}
+                    onChange={() => setExtraTimeWinner("away")}
+                    disabled={saving}
+                  />
+                  <span>{away?.name} wins after Extra Time / Penalties</span>
+                </label>
+              </div>
+            </div>
+          )}
+
           {!scoreMatchesWinner && (
             <div className="pred-score-warning">
-              Pick a scoreline where your selected team wins.
+              Pick a scoreline where your selected team wins or is a draw.
             </div>
           )}
         </div>
@@ -406,7 +459,14 @@ export default function PredictionCard({
           <span>Your prediction</span>
           <strong>
             {config.hasScorePrediction ? (
-              `${getWinnerLabel(selectedWinner, home?.name, away?.name)} - ${homeGoals} : ${awayGoals}`
+              <>
+                {selectedWinner === "draw" ? "Draw" : getWinnerLabel(selectedWinner, home?.name, away?.name)} - {homeGoals} : {awayGoals}
+                {selectedWinner === "draw" && extraTimeWinner && (
+                  <div className="pred-locked-extra-time">
+                    Knockout Winner: {extraTimeWinner === "home" ? home?.name : away?.name}
+                  </div>
+                )}
+              </>
             ) : (
               getWinnerLabel(selectedWinner, home?.name, away?.name)
             )}

@@ -142,7 +142,10 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
     checkNotificationPermission();
   }, [userId]);
 
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+
   const handleRequestPermission = async () => {
+    setShowNotificationModal(false);
     if (!userId) {
       toast.error("Please log in to enable notifications");
       return;
@@ -269,10 +272,10 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
                 <button
                   type="button"
                   className="hero-bell-button animate-pulse"
-                  onClick={handleRequestPermission}
+                  onClick={() => setShowNotificationModal(true)}
                   title="Enable Push Notifications"
                 >
-                  🔔
+                  🔔 Get Notifications
                 </button>
               )}
             </div>
@@ -307,6 +310,34 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
         <div className="hero-empty">
           <div className="hero-empty-icon">{sport === "cricket" ? "🏏" : "⚽"}</div>
           <div className="hero-empty-text">No upcoming matches</div>
+        </div>
+      )}
+
+      {showNotificationModal && (
+        <div className="hero-notif-overlay animate-fade-in" onClick={() => setShowNotificationModal(false)}>
+          <div className="hero-notif-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="hero-notif-header">
+              <span className="hero-notif-icon">🔔</span>
+              <h3>Enable Predictions Notifications</h3>
+            </div>
+            <div className="hero-notif-body">
+              <p>Get the most out of Football Talks by staying updated in real time! Enabling notifications will let you know:</p>
+              <ul>
+                <li>⚡ <strong>Matchday Reminders:</strong> Never miss a prediction deadline.</li>
+                <li>🏆 <strong>Leaderboard Updates:</strong> Know instantly when you climb to the top.</li>
+                <li>🎯 <strong>Score Alerts:</strong> Live updates on matches you predicted.</li>
+                <li>💬 <strong>Chat Mentions:</strong> Stay connected with room members.</li>
+              </ul>
+            </div>
+            <div className="hero-notif-actions">
+              <button className="hero-notif-btn hero-notif-btn--cancel" onClick={() => setShowNotificationModal(false)}>
+                Not Now
+              </button>
+              <button className="hero-notif-btn hero-notif-btn--allow" onClick={handleRequestPermission}>
+                Allow notifications
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

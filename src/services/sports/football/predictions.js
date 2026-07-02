@@ -16,7 +16,8 @@ export const savePrediction = async (
   fixtureId,
   outcome,
   homeGoals = 0,
-  awayGoals = 0
+  awayGoals = 0,
+  extraTimeWinner = null
 ) => {
   const id = `${userId}_${roomId}_${fixtureId}`;
 
@@ -33,6 +34,7 @@ export const savePrediction = async (
 
       predictedHomeGoals: Number(homeGoals),
       predictedAwayGoals: Number(awayGoals),
+      extraTimeWinner: extraTimeWinner,
 
       updatedAt: serverTimestamp(),
     },

@@ -544,3 +544,192 @@
   border: 0.5px solid var(--border-strong);
 }
 
+/* View All Predictions Button */
+.view-all-predictions-btn {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  margin: 16px auto 0;
+  padding: 12px 20px;
+  background: rgba(255, 90, 0, 0.08);
+  border: 1px solid rgba(255, 90, 0, 0.25);
+  border-radius: 14px;
+  color: var(--text-accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-all-predictions-btn:hover {
+  background: rgba(255, 90, 0, 0.15);
+  border-color: var(--border-accent);
+  transform: translateY(-1px);
+}
+
+/* History Modal Overlay */
+.history-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+}
+
+/* Modal Box */
+.history-modal-content {
+  width: 100%;
+  max-width: 580px;
+  max-height: 85vh;
+  background: #141622;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.history-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.history-modal-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.history-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.history-modal-close:hover {
+  color: #fff;
+}
+
+/* Modal Sport Filters */
+.history-modal-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.modal-filter-btn {
+  padding: 8px 16px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.modal-filter-btn.active {
+  background: linear-gradient(135deg, #ff9500, #ff5a00);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 90, 0, 0.3);
+}
+
+/* Scrollable History List */
+.history-modal-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+/* Custom Scrollbar for Modal List */
+.history-modal-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-modal-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.history-sport-badge {
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.06);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Pagination Footer */
+.history-modal-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.history-modal-pagination button {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-modal-pagination button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.history-modal-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-modal-pagination span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

@@ -171,7 +171,17 @@ const scoreFootballPrediction = (prediction, match) => {
   }
 
   const actualWinner = getPredictionWinner(match, score);
-  const correctWinner = prediction.prediction === actualWinner;
+  const predictedWinner = prediction.prediction;
+
+  let correctWinner = false;
+  if (predictedWinner === "draw" && actualWinner === "draw") {
+    // Determine the final knockout winner if any
+    const decisiveWinner = getPredictionWinner(match, score); // this matches our resolved penalties/ET winner
+    correctWinner = (decisiveWinner === "draw" || prediction.extraTimeWinner === decisiveWinner);
+  } else {
+    correctWinner = predictedWinner === actualWinner;
+  }
+
   const exactScore =
     correctWinner &&
     toNumber(prediction.predictedHomeGoals) === score.homeGoals &&
@@ -297,6 +307,7 @@ export const calculatePredictionHistory = async (userId, cachedMatches = null, r
         predictedWinner: prediction.prediction,
         predictedHomeGoals: isCricket ? 0 : (toNumber(prediction.predictedHomeGoals) ?? 0),
         predictedAwayGoals: isCricket ? 0 : (toNumber(prediction.predictedAwayGoals) ?? 0),
+        extraTimeWinner: prediction.extraTimeWinner || null,
         actualHomeGoals: scored.actualHomeGoals,
         actualAwayGoals: scored.actualAwayGoals,
         correctWinner: scored.correctWinner,

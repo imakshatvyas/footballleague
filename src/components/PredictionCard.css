@@ -676,3 +676,60 @@
     height: 5px;
   }
 }
+/* Draw option styling in team selector */
+.pred-team-card--draw {
+  border-style: dashed;
+}
+
+.pred-draw-icon {
+  font-size: 24px;
+}
+
+/* Extra-Time Selection Section */
+.pred-extra-time-section {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.pred-extra-time-title {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+
+.pred-extra-time-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pred-extra-time-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.pred-extra-time-option input[type="radio"] {
+  accent-color: #ff9500;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+.pred-locked-extra-time {
+  margin-top: 4px;
+  color: #ff9500;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
