@@ -66,6 +66,7 @@ export default function RoomPage() {
         if (cancelled) return;
 
         setRoom(roomData);
+        setCompetitionFilter(sport === 'cricket' ? 'india' : 'All');
         setLeaderboard(lbData || []);
         setMembers(memberData || []);
         setAllRoomPredictions(roomPredData || []);
@@ -778,7 +779,7 @@ const TeamLogo = ({ name, shortName, size = 24 }) => {
 };
 
 /* ─── Recent Results Tab ─────────────────────────────────────────── */
-function RecentResults({ roomId, currentUserId, predictions, sport }) {
+function RecentResults({ roomId, currentUserId, predictions, sport, selectedFilter, onFilterChange }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -794,53 +795,61 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
 
   // Flat list: only finished matches (FT, AET, PEN), sorted newest first
   const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN', 'Complete']);
-  const finished = results
+  let finished = results
     .filter(f => FINISHED_STATUSES.has(f.fixture?.status?.short))
     .slice()
-    .sort((a, b) => new Date(b.fixture?.date) - new Date(a.fixture?.date))
-    .filter(f => {
-      if (!isCricket) return true;
-      const cat = getCricketCategory(f);
-      return cat !== null; // skip minor leagues / PSL
-    });
+    .sort((a, b) => new Date(b.fixture?.date) - new Date(a.fixture?.date));
 
-  if (!finished.length) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state__icon">📊</div>
-        <div className="empty-state__title">No results yet</div>
-        <div className="empty-state__subtitle">Completed matches will appear here.</div>
-      </div>
-    );
+  // Apply cricket filters on results
+  if (isCricket) {
+    finished = filterCricketFixtures(finished, selectedFilter);
   }
 
   return (
     <div className="results-flat animate-fade-up">
-      {finished.map(fixture => {
-        const fid        = fixture.fixture?.id;
-        const scoreBreakdown = getFixtureScoreBreakdown(fixture);
-        const homeGoals  = scoreBreakdown.ft.home;
-        const awayGoals  = scoreBreakdown.ft.away;
-        const outcome    = scoreBreakdown.winner;
-        const homeName   = fixture.teams?.home?.name;
-        const awayName   = fixture.teams?.away?.name;
-        const homeSName  = fixture.teams?.home?.shortName;
-        const awaySName  = fixture.teams?.away?.shortName;
-        const myPred = predictions[String(fid)];
-        const hasVoted = myPred?.winner === 'home' || myPred?.winner === 'away' || myPred?.winner === 'draw';
-        const winnerCorrect = hasVoted && myPred?.winner === outcome;
-        const displayHomeScore = isCricket ? (fixture.scoreDisplay?.homeScore || '—') : homeGoals;
-        const displayAwayScore = isCricket ? (fixture.scoreDisplay?.awayScore || '—') : awayGoals;
-        const scoreCorrect = !isCricket && winnerCorrect &&
-          Number(myPred?.homeGoals) === homeGoals &&
-          Number(myPred?.awayGoals) === awayGoals;
-        const earnedPoints = winnerCorrect ? (scoreCorrect ? 1.5 : 1) : 0;
-        let statusClass = 'result-card--novote';
-        if (hasVoted) statusClass = winnerCorrect ? 'result-card--correct' : 'result-card--wrong';
+      {isCricket && results.length > 0 && (
+        <CricketFilterBar
+          fixtures={results.filter(f => FINISHED_STATUSES.has(f.fixture?.status?.short))}
+          selectedFilter={selectedFilter}
+          onChange={onFilterChange}
+        />
+      )}
 
-        const matchDate = fixture.fixture?.date
-          ? new Date(fixture.fixture.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-          : '';
+      {finished.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state__icon">📊</div>
+          <div className="empty-state__title">No results found</div>
+          <div className="empty-state__subtitle">Check another filter or come back soon.</div>
+        </div>
+      ) : (
+        finished.map(fixture => {
+          const fid        = fixture.fixture?.id;
+          const scoreBreakdown = getFixtureScoreBreakdown(fixture);
+          const homeGoals  = scoreBreakdown.ft.home;
+          const awayGoals  = scoreBreakdown.ft.away;
+          const outcome    = scoreBreakdown.winner;
+          
+          // Use shortName/TLA or truncated name to prevent UI overflow
+          const homeName   = fixture.teams?.home?.shortName || fixture.teams?.home?.tla || fixture.teams?.home?.name;
+          const awayName   = fixture.teams?.away?.shortName || fixture.teams?.away?.tla || fixture.teams?.away?.name;
+          const homeSName  = fixture.teams?.home?.shortName;
+          const awaySName  = fixture.teams?.away?.shortName;
+          
+          const myPred = predictions[String(fid)];
+          const hasVoted = myPred?.winner === 'home' || myPred?.winner === 'away' || myPred?.winner === 'draw';
+          const winnerCorrect = hasVoted && myPred?.winner === outcome;
+          const displayHomeScore = isCricket ? (fixture.scoreDisplay?.homeScore || '—') : homeGoals;
+          const displayAwayScore = isCricket ? (fixture.scoreDisplay?.awayScore || '—') : awayGoals;
+          const scoreCorrect = !isCricket && winnerCorrect &&
+            Number(myPred?.homeGoals) === homeGoals &&
+            Number(myPred?.awayGoals) === awayGoals;
+          const earnedPoints = winnerCorrect ? (scoreCorrect ? 1.5 : 1) : 0;
+          let statusClass = 'result-card--novote';
+          if (hasVoted) statusClass = winnerCorrect ? 'result-card--correct' : 'result-card--wrong';
+
+          const matchDate = fixture.fixture?.date
+            ? new Date(fixture.fixture.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+            : '';
 
         return (
           <div key={fid} className={`result-card ${statusClass}`}>
@@ -925,7 +934,7 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
             />
           </div>
         );
-      })}
+      }))}
     </div>
   );
 }

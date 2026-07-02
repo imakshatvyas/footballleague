@@ -68,7 +68,7 @@ export const buildCricketFilters = (fixtures = []) => {
     if (key) keys.add(key);
   });
 
-  const filters = [{ key: 'all', ...FILTER_META.all }];
+  const filters = [];
 
   if (hasIndia) {
     filters.push({ key: 'india', ...FILTER_META.india });
@@ -99,8 +99,7 @@ export const buildCricketFilters = (fixtures = []) => {
   return filters;
 };
 
-export const filterCricketFixtures = (fixtures = [], selectedFilter = 'all') => {
-  if (selectedFilter === 'all') return fixtures;
+export const filterCricketFixtures = (fixtures = [], selectedFilter = 'india') => {
   if (selectedFilter === 'india') return fixtures.filter(isIndiaCricketMatch);
 
   return fixtures.filter((fixture) => getCricketCompetitionKey(fixture) === selectedFilter);
@@ -108,8 +107,9 @@ export const filterCricketFixtures = (fixtures = [], selectedFilter = 'all') => 
 
 export default function CricketFilterBar({ fixtures = [], selectedFilter, onChange }) {
   const filters = useMemo(() => buildCricketFilters(fixtures), [fixtures]);
+  const defaultFilter = filters.length > 0 ? filters[0].key : 'india';
   const selectedExists = filters.some((filter) => filter.key === selectedFilter);
-  const activeFilter = selectedExists ? selectedFilter : 'all';
+  const activeFilter = selectedExists ? selectedFilter : defaultFilter;
 
   if (filters.length <= 1) return null;
 
