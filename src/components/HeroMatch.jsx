@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import "./HeroMatch.css";
 
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"];
+const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
 function getStatusInfo(fixture) {
   const short = fixture?.fixture?.status?.short;
@@ -14,11 +15,14 @@ function getStatusInfo(fixture) {
   const isLive = LIVE_STATUSES.includes(short);
 
   if (isLive) {
-    if (short === "HT") return { label: "Half time", isLive: true };
-    if (short === "ET") return { label: `${elapsed ?? ""}' ET`, isLive: true };
+    if (short === "HT") return { label: "Half Time", isLive: true };
+    if (short === "BT") return { label: "Break Time", isLive: true };
+    if (short === "ET") return { label: elapsed ? `${elapsed}' ET` : "Extra Time", isLive: true };
     if (short === "P") return { label: "Penalties", isLive: true };
+    if (short === "2H") return { label: elapsed ? `${elapsed}'` : "2nd Half", isLive: true };
+    // 1H / LIVE
     return {
-      label: elapsed ? `${elapsed}'` : updatedAt ? `Live now - updated ${updatedAt}` : "Live now",
+      label: elapsed ? `${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
       isLive: true,
     };
   }
@@ -29,7 +33,9 @@ function getStatusInfo(fixture) {
     return { label: null, isLive: false, kickoff: new Date(date) };
   }
 
-  if (short === "FT") return { label: "Full time", isLive: false };
+  if (short === "FT") return { label: "Full Time", isLive: false };
+  if (short === "AET") return { label: "After Extra Time", isLive: false };
+  if (short === "PEN") return { label: "After Penalties", isLive: false };
   return { label: short || "Match", isLive: false };
 }
 
@@ -165,7 +171,8 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
 
   const isLive = statusInfo?.isLive;
   const isNS = fixture?.fixture?.status?.short === "NS";
-  const showScore = isLive || fixture?.fixture?.status?.short === "FT";
+  const isFinished = FINISHED_STATUSES.includes(fixture?.fixture?.status?.short);
+  const showScore = isLive || isFinished;
   const hasPrediction = userPrediction?.winner === "home" || userPrediction?.winner === "away";
 
   const { config } = getSportService(sport);

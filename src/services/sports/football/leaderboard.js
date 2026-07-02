@@ -107,10 +107,12 @@ const getWinnerFromScore = ({ homeGoals, awayGoals }) => {
   return "draw";
 };
 
+const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "FINISHED"]);
+
 const isFinishedMatch = (match) => {
   const status = match?.fixture?.status?.short ?? match?.status;
 
-  if (status && !["FT", "FINISHED"].includes(status)) {
+  if (status && !FINISHED_STATUS_CODES.has(status)) {
     return false;
   }
 

@@ -3,6 +3,7 @@ import { getSportService } from "../services/sports/sportResolver";
 import "./PredictionCard.css";
 
 const LIVE_STATUSES = ["LIVE", "1H", "HT", "2H", "ET", "BT", "P"];
+const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
 function formatKickoff(dateStr) {
   if (!dateStr) return "";
@@ -38,24 +39,28 @@ function getMatchStatus(fixture) {
   const short = fixture?.fixture?.status?.short;
   const elapsed = fixture?.fixture?.status?.elapsed;
   const isLive = LIVE_STATUSES.includes(short);
-  const isFinished = short === "FT";
+  const isFinished = FINISHED_STATUSES.includes(short);
   const isUpcoming = short === "NS";
   const updatedAt = formatUpdatedAt(fixture?.fixture?.status?.updatedAt);
 
   if (isLive) {
-    if (short === "HT") return { short, isLive, isFinished, isUpcoming, label: "Half time" };
-    if (short === "ET") return { short, isLive, isFinished, isUpcoming, label: `${elapsed ?? ""}' ET` };
+    if (short === "HT") return { short, isLive, isFinished, isUpcoming, label: "Half Time" };
+    if (short === "BT") return { short, isLive, isFinished, isUpcoming, label: "Break Time" };
+    if (short === "ET") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${elapsed}' ET` : "Extra Time" };
     if (short === "P") return { short, isLive, isFinished, isUpcoming, label: "Penalties" };
+    if (short === "2H") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${elapsed}'` : "2nd Half" };
     return {
       short,
       isLive,
       isFinished,
       isUpcoming,
-      label: elapsed ? `${elapsed}'` : updatedAt ? `Live now - updated ${updatedAt}` : "Live now",
+      label: elapsed ? `${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
     };
   }
 
-  if (isFinished) return { short, isLive, isFinished, isUpcoming, label: "Finished" };
+  if (short === "FT") return { short, isLive, isFinished, isUpcoming, label: "Finished" };
+  if (short === "AET") return { short, isLive, isFinished, isUpcoming, label: "After Extra Time" };
+  if (short === "PEN") return { short, isLive, isFinished, isUpcoming, label: "After Penalties" };
   if (isUpcoming) return { short, isLive, isFinished, isUpcoming, label: formatKickoff(fixture?.fixture?.date) };
   return { short, isLive, isFinished, isUpcoming, label: short || "Match" };
 }

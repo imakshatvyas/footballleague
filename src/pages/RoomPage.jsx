@@ -112,9 +112,16 @@ export default function RoomPage() {
         const matches = (fixtureData || []).slice().sort(
           (a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date)
         );
-        const liveStatuses = ['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE'];
-        const liveMatches = matches.filter(f => liveStatuses.includes(f.fixture?.status?.short));
+
+        // ── Status sets (keep in sync with football/fixtures.js) ──
+        const LIVE_S = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'LIVE']);
+        const FINISHED_S = new Set(['FT', 'AET', 'PEN', 'Complete']);
+
+        // Live matches — always include, regardless of kickoff time
+        const liveMatches = matches.filter(f => LIVE_S.has(f.fixture?.status?.short));
         const live = liveMatches[0] || null;
+
+        // Upcoming: NS within prediction window
         const upcoming = matches.filter(f => {
           const kickoff = new Date(f.fixture?.date);
           return (
@@ -123,14 +130,37 @@ export default function RoomPage() {
             kickoff <= predictionCutoff
           );
         });
+
+        // Next match for hero when no live match
         const next = upcoming[0] || matches.find(f => {
           const kickoff = new Date(f.fixture?.date);
           return f.fixture?.status?.short === 'NS' && kickoff >= now;
         });
-        const activeFixtures = [...liveMatches, ...upcoming].filter(
-          (fixture, index, allFixtures) =>
-            allFixtures.findIndex(f => f.fixture?.id === fixture.fixture?.id) === index
-        );
+
+        // Active fixtures = live (first) + upcoming, deduplicated
+        const seen = new Set();
+        const activeFixtures = [...liveMatches, ...upcoming].filter(fixture => {
+          const id = fixture.fixture?.id;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+
+        // Dev logging
+        if (import.meta.env.DEV) {
+          const finished = matches.filter(f => FINISHED_S.has(f.fixture?.status?.short));
+          console.group(`📋 RoomPage fixtures [${sport}]`);
+          console.log(`Total from API: ${matches.length}`);
+          console.log(`Live: ${liveMatches.length}`);
+          console.log(`Upcoming (in window): ${upcoming.length}`);
+          console.log(`Finished: ${finished.length}`);
+          if (liveMatches.length > 0) {
+            liveMatches.forEach(m => {
+              console.log(`🔴 ${m.teams?.home?.name} vs ${m.teams?.away?.name} — ${m.fixture?.status?.short}`);
+            });
+          }
+          console.groupEnd();
+        }
 
         setLiveMatch(live || null);
         setNextMatch(next || null);
@@ -762,9 +792,10 @@ function RecentResults({ roomId, currentUserId, predictions, sport }) {
 
   const isCricket = sport === 'cricket';
 
-  // Flat list: only finished matches, sorted newest first
+  // Flat list: only finished matches (FT, AET, PEN), sorted newest first
+  const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN', 'Complete']);
   const finished = results
-    .filter(f => f.fixture?.status?.short === 'FT')
+    .filter(f => FINISHED_STATUSES.has(f.fixture?.status?.short))
     .slice()
     .sort((a, b) => new Date(b.fixture?.date) - new Date(a.fixture?.date))
     .filter(f => {
