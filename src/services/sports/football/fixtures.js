@@ -20,11 +20,18 @@ function statusMap(status) {
     case "TIMED":
       return "NS";
     case "LIVE":
-      return "LIVE";
     case "IN_PLAY":
+    case "FIRST_HALF":
       return "1H";
     case "PAUSED":
+    case "HALF_TIME":
       return "HT";
+    case "SECOND_HALF":
+      return "2H";
+    case "EXTRA_TIME":
+      return "ET";
+    case "PENALTY_SHOOTOUT":
+      return "P";
     case "FINISHED":
       return "FT";
     default:
