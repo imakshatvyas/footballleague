@@ -175,7 +175,7 @@ export default function RoomPage() {
     };
 
     load();
-    const refreshId = setInterval(load, 60000);
+    const refreshId = setInterval(load, 30000);
     return () => {
       cancelled = true;
       clearInterval(refreshId);

@@ -569,29 +569,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // ── Global Serverless Cache ──
-    // Cached in container memory across consecutive function invocations
-    if (!global.footballCache) {
-      global.footballCache = {
-        data: null,
-        timestamp: 0
-      };
-    }
-
-    const now = Date.now();
-    const CACHE_DURATION = 60000; // 60 seconds cache
-
-    if (global.footballCache.data && (now - global.footballCache.timestamp < CACHE_DURATION)) {
-      console.log("Serving Football matches from Netlify memory cache");
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(global.footballCache.data),
-      };
-    }
-
     try {
-      console.log("Fetching fresh Football matches from API...");
       const response = await axios.get(FOOTBALL_DATA_URL, {
         headers: {
           "X-Auth-Token": process.env.FOOTBALL_DATA_TOKEN,
@@ -602,10 +580,6 @@ exports.handler = async (event) => {
         timeout: 10000,
       });
 
-      // Update global cache
-      global.footballCache.data = response.data;
-      global.footballCache.timestamp = now;
-
       return {
         statusCode: 200,
         headers,
@@ -613,17 +587,6 @@ exports.handler = async (event) => {
       };
     } catch (error) {
       console.error("Football Data Error:", error.response?.data || error.message);
-      
-      // Serve stale cache if API fails or rate limits us
-      if (global.footballCache.data) {
-        console.warn("Serving stale Football cache due to API error");
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(global.footballCache.data),
-        };
-      }
-
       return {
         statusCode: error.response?.status || 502,
         headers,
