@@ -66,29 +66,8 @@ function normalize(match) {
   const regularTimeScore = match.score?.regularTime || match.score?.fullTime;
   const fullTimeScore = regularTimeScore || match.score?.fullTime;
 
-  let statusShort = statusMap(match.status);
-
-  // ── Time-based live inference ──────────────────────────────────
-  // football-data.org free tier often leaves matches as "TIMED" / "NS"
-  // even after kickoff. If the API hasn't updated yet, infer live status
-  // from the kickoff time. A standard match is 90 min + stoppages ~ 105 min.
-  // We keep it live-inferred for up to 120 minutes after kickoff.
-  let inferredElapsed = null;
-  if (UPCOMING_STATUS_CODES.has(statusShort) && match.utcDate) {
-    const kickoff = new Date(match.utcDate);
-    const nowMs = Date.now();
-    const msSinceKickoff = nowMs - kickoff.getTime();
-    const minutesSince = Math.floor(msSinceKickoff / 60000);
-
-    if (minutesSince >= 0 && minutesSince < 120) {
-      // Match should be live — the API just hasn't updated status yet
-      statusShort = minutesSince <= 45 ? "1H" : "HT";
-      inferredElapsed = minutesSince <= 45 ? minutesSince : null;
-    }
-  }
-
+  const statusShort = statusMap(match.status);
   const isLive = LIVE_STATUS_CODES.has(statusShort);
-
 
   // For live matches, use the current half-time score if available
   const liveScore = isLive
@@ -104,9 +83,8 @@ function normalize(match) {
       status: {
         short: statusShort,
         long: match.status,
-        elapsed: match.minute ?? inferredElapsed ?? null,
+        elapsed: match.minute ?? null,
         updatedAt: match.lastUpdated,
-        inferred: inferredElapsed !== null, // flag so UI can show "~" prefix
       },
     },
     league: {

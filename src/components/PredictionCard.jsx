@@ -44,18 +44,17 @@ function getMatchStatus(fixture) {
   const updatedAt = formatUpdatedAt(fixture?.fixture?.status?.updatedAt);
 
   if (isLive) {
-    const approx = fixture?.fixture?.status?.inferred ? "~" : "";
     if (short === "HT") return { short, isLive, isFinished, isUpcoming, label: "Half Time" };
     if (short === "BT") return { short, isLive, isFinished, isUpcoming, label: "Break Time" };
-    if (short === "ET") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${approx}${elapsed}' ET` : "Extra Time" };
+    if (short === "ET") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${elapsed}' ET` : "Extra Time" };
     if (short === "P") return { short, isLive, isFinished, isUpcoming, label: "Penalties" };
-    if (short === "2H") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${approx}${elapsed}'` : "2nd Half" };
+    if (short === "2H") return { short, isLive, isFinished, isUpcoming, label: elapsed ? `${elapsed}'` : "2nd Half" };
     return {
       short,
       isLive,
       isFinished,
       isUpcoming,
-      label: elapsed ? `${approx}${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
+      label: elapsed ? `${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
     };
   }
 
