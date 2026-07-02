@@ -19,7 +19,7 @@ export async function initPushNotifications(userId) {
 
     if (permission.receive !== "granted") {
       console.log("Notification permission denied");
-      return;
+      return false;
     }
 
     // Remove old listeners (avoids duplicates)
@@ -74,7 +74,9 @@ export async function initPushNotifications(userId) {
     await PushNotifications.register();
 
     console.log("Push notification registration requested");
+    return true;
   } catch (error) {
     console.error("Push Notification Error:", error);
+    return false;
   }
 }

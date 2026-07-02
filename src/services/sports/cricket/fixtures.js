@@ -227,10 +227,11 @@ function isMatchRelevant(match) {
   const isIndiaBilateral = isIndia && indiaOpponents.some(n => name.includes(n) || team1.includes(n) || team2.includes(n));
   if (isIndiaBilateral) return true;
 
-  // 2026 domestic leagues (MLC, SA20, CPL, The Hundred, ILT20, LPL)
+  if (name.includes("mlc") || name.includes("major league cricket")) return false;
+
+  // 2026 domestic leagues (SA20, CPL, The Hundred, ILT20, LPL)
   const is2026League = (name.includes("2026") || name.includes("2025-26") || name.includes("2026-27")) &&
-    (name.includes("mlc") || name.includes("major league cricket") ||
-     name.includes("sa20") || name.includes("cpl") || name.includes("caribbean premier league") ||
+    (name.includes("sa20") || name.includes("cpl") || name.includes("caribbean premier league") ||
      name.includes("the hundred") || name.includes("ilt20") || name.includes("lpl") || name.includes("lanka premier league"));
   if (is2026League) return true;
 

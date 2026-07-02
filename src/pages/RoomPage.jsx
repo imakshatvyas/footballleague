@@ -276,6 +276,7 @@ const handlePredict = useCallback(
         userPrediction={heroPrediction}
         onOpenRoomInfo={() => setInfoOpen(true)}
         sport={sport}
+        userId={user?.uid}
       />
 
       <RoomInfoSheet

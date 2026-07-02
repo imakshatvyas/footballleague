@@ -430,3 +430,45 @@
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
 }
 
+/* Premium Bell Button Style */
+.hero-bell-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ff9800;
+  cursor: pointer;
+  margin-top: 4px;
+  gap: 4px;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.hero-bell-button:hover {
+  background: rgba(255, 152, 0, 0.2);
+  border-color: #ff9800;
+  transform: scale(1.05);
+}
+
+/* Pulse animation helper */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .6;
+  }
+}
+
+

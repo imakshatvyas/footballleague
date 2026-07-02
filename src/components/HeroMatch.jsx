@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSportService } from "../services/sports/sportResolver";
+import { PushNotifications } from "@capacitor/push-notifications";
+import { initPushNotifications } from "../services/pushNotificationService";
+import { toast } from "react-hot-toast";
 import "./HeroMatch.css";
 
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"];
@@ -113,9 +116,45 @@ function formatUpdatedAt(updatedAt) {
   });
 }
 
-export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo, sport = "football" }) {
+export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo, sport = "football", userId }) {
   const statusInfo = fixture ? getStatusInfo(fixture) : null;
   const countdown = useCountdown(statusInfo?.kickoff);
+
+  const [showBell, setShowBell] = useState(false);
+
+  useEffect(() => {
+    const checkNotificationPermission = async () => {
+      try {
+        const perm = await PushNotifications.checkPermissions();
+        if (perm.receive !== "granted") {
+          setShowBell(true);
+        } else {
+          setShowBell(false);
+        }
+      } catch (e) {
+        if (typeof window !== "undefined" && "Notification" in window) {
+          if (Notification.permission !== "granted") {
+            setShowBell(true);
+          }
+        }
+      }
+    };
+    checkNotificationPermission();
+  }, [userId]);
+
+  const handleRequestPermission = async () => {
+    if (!userId) {
+      toast.error("Please log in to enable notifications");
+      return;
+    }
+    const success = await initPushNotifications(userId);
+    if (success) {
+      toast.success("Notifications successfully enabled!");
+      setShowBell(false);
+    } else {
+      toast.error("Permission blocked. Please enable notifications in your browser/device settings!");
+    }
+  };
 
   const homeTeam = fixture?.teams?.home;
   const awayTeam = fixture?.teams?.away;
@@ -225,6 +264,16 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
                     </div>
                   )}
                 </>
+              )}
+              {showBell && (
+                <button
+                  type="button"
+                  className="hero-bell-button animate-pulse"
+                  onClick={handleRequestPermission}
+                  title="Enable Push Notifications"
+                >
+                  🔔
+                </button>
               )}
             </div>
 

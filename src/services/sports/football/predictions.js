@@ -40,6 +40,7 @@ export const savePrediction = async (
   );
 };
 
+
 export const getUserPredictions = async (userId, roomId) => {
   const q = query(
     collection(db, "predictions"),

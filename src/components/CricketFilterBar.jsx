@@ -5,7 +5,6 @@ const FILTER_META = {
   india: { label: 'India', icon: '🇮🇳' },
   ipl: { label: 'IPL', icon: '🏆' },
   worldcup: { label: 'World Cup', icon: '🌍' },
-  mlc: { label: 'MLC', icon: '🇺🇸' },
   bbl: { label: 'BBL', icon: '🇦🇺' },
   major: { label: 'Major Leagues', icon: '🏏' },
 };
@@ -24,7 +23,6 @@ export const getCricketCompetitionKey = (fixture) => {
   const series = normalize(fixture?.league?.name);
 
   if (series.includes('indian premier league') || series.includes('ipl')) return 'ipl';
-  if (series.includes('major league cricket') || series.includes('mlc')) return 'mlc';
   if (series.includes('big bash') || series.includes('bbl')) return 'bbl';
   if (
     series.includes('world cup') ||
@@ -79,7 +77,7 @@ export const buildCricketFilters = (fixtures = []) => {
   Array.from(keys)
     .filter((key) => key !== 'india')
     .sort((a, b) => {
-      const preferred = ['ipl', 'worldcup', 'mlc', 'bbl', 'major'];
+      const preferred = ['ipl', 'worldcup', 'bbl', 'major'];
       const aIndex = preferred.indexOf(a);
       const bIndex = preferred.indexOf(b);
 
@@ -125,7 +123,7 @@ export default function CricketFilterBar({ fixtures = [], selectedFilter, onChan
             className={`cricket-filter-chip ${activeFilter === filter.key ? 'cricket-filter-chip--active' : ''}`}
             onClick={() => onChange(filter.key)}
           >
-            <span>{filter.icon}</span>
+            <span className="cricket-filter-icon">{filter.icon}</span>
             {filter.label}
           </button>
         ))}

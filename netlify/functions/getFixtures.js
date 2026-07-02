@@ -386,7 +386,10 @@ const MOCK_CRICKET_MATCHES = [
       team2Score: { inngs1: { runs: 171, wickets: 7, overs: 20 } }
     }
   }
-];
+].filter(m => {
+  const name = (m.seriesName || "").toLowerCase();
+  return !name.includes("mlc") && !name.includes("major league cricket");
+});
 
 function injectMockSchedules(responseData, scrapedMatch) {
   if (!responseData.response) responseData.response = { schedules: [] };
