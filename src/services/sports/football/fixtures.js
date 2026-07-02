@@ -91,11 +91,14 @@ function normalize(match) {
 
 
   // For live matches, use the current half-time score if available
+  // Fallback to fullTime if halfTime goals are empty or null
   const liveScore = isLive
-    ? (match.score?.halfTime ?? match.score?.fullTime ?? null)
+    ? (match.score?.halfTime && match.score.halfTime.home !== null
+        ? match.score.halfTime
+        : (match.score?.fullTime ?? null))
     : null;
 
-  const scoreForDisplay = isLive ? liveScore : fullTimeScore;
+  const scoreForDisplay = isLive ? (liveScore || fullTimeScore) : fullTimeScore;
 
   const normalized = {
     fixture: {
