@@ -16,8 +16,15 @@ export function AuthProvider({ children }) {
       setLoading(false);
 
       if (u) {
-        console.log("Initializing push notifications...");
-        await initPushNotifications(u.uid);
+        // Only run native push notification registration on Android/iOS Capacitor environments
+        import("@capacitor/core").then(({ Capacitor }) => {
+          if (Capacitor.isNativePlatform()) {
+            console.log("Initializing push notifications on native platform...");
+            initPushNotifications(u.uid);
+          } else {
+            console.log("Push notifications skipped (running in web browser context)");
+          }
+        });
       }
     });
 
