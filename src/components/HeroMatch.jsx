@@ -132,8 +132,15 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
           setShowBell(false);
         }
       } catch (e) {
-        if (typeof window !== "undefined" && "Notification" in window) {
-          if (Notification.permission !== "granted") {
+        if (typeof window !== "undefined") {
+          if ("Notification" in window) {
+            if (Notification.permission !== "granted") {
+              setShowBell(true);
+            } else {
+              setShowBell(false);
+            }
+          } else {
+            // Show bell on mobile browsers where Notification API is not exposed yet (e.g. iOS Safari pre-PWA)
             setShowBell(true);
           }
         }
