@@ -15,14 +15,15 @@ function getStatusInfo(fixture) {
   const isLive = LIVE_STATUSES.includes(short);
 
   if (isLive) {
+    const approx = fixture?.fixture?.status?.inferred ? "~" : "";
     if (short === "HT") return { label: "Half Time", isLive: true };
     if (short === "BT") return { label: "Break Time", isLive: true };
-    if (short === "ET") return { label: elapsed ? `${elapsed}' ET` : "Extra Time", isLive: true };
+    if (short === "ET") return { label: elapsed ? `${approx}${elapsed}' ET` : "Extra Time", isLive: true };
     if (short === "P") return { label: "Penalties", isLive: true };
-    if (short === "2H") return { label: elapsed ? `${elapsed}'` : "2nd Half", isLive: true };
+    if (short === "2H") return { label: elapsed ? `${approx}${elapsed}'` : "2nd Half", isLive: true };
     // 1H / LIVE
     return {
-      label: elapsed ? `${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
+      label: elapsed ? `${approx}${elapsed}'` : updatedAt ? `Live · ${updatedAt}` : "Live now",
       isLive: true,
     };
   }
