@@ -55,13 +55,14 @@ export default function RoomPage() {
         }
         const sport = roomData.sport || 'football';
 
-        const [fixtureData, predData, roomPredData, lbData, memberData] = await Promise.all([
+        const [fixtureData, roomPredData] = await Promise.all([
           getTournamentMatches(sport),
-          getUserPredictions(user.uid, roomId, sport),
           getRoomPredictions(roomId, sport),
-          getRoomLeaderboard(roomId, sport),
-          getRoomMembers(roomId),
         ]);
+
+        const predData = (roomPredData || []).filter(p => p.userId === user.uid);
+        const memberData = roomData.members || [];
+        const lbData = await getRoomLeaderboard(roomId, sport, roomData, roomPredData);
 
         if (cancelled) return;
 

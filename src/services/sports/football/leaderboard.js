@@ -177,22 +177,29 @@ const getStreaks = (completedPredictions) => {
   return { currentStreak, bestStreak };
 };
 
-export const getRoomLeaderboard = async (roomId) => {
+export const getRoomLeaderboard = async (roomId, preloadedRoom = null, preloadedPredictions = null) => {
   if (!roomId) {
     return [];
   }
 
-  const [predictionsSnap, roomSnap, finishedMatches] = await Promise.all([
-    getDocs(query(collection(db, "predictions"), where("roomId", "==", roomId))),
-    getDoc(doc(db, "rooms", roomId)),
+  const predictionsPromise = preloadedPredictions
+    ? Promise.resolve(preloadedPredictions)
+    : getDocs(query(collection(db, "predictions"), where("roomId", "==", roomId))).then(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+  const roomPromise = preloadedRoom
+    ? Promise.resolve(preloadedRoom)
+    : getDoc(doc(db, "rooms", roomId)).then(snap => snap.exists() ? snap.data() : null);
+
+  const [predictions, room, finishedMatches] = await Promise.all([
+    predictionsPromise,
+    roomPromise,
     getRecentResults(),
   ]);
 
-  if (!roomSnap.exists()) {
+  if (!room) {
     return [];
   }
 
-  const room = roomSnap.data();
   const members = Array.isArray(room.members) ? room.members : [];
   const statsByUserId = {};
 
@@ -210,8 +217,9 @@ export const getRoomLeaderboard = async (roomId) => {
     Array.isArray(finishedMatches) ? finishedMatches : []
   );
 
-  predictionsSnap.docs.forEach((predictionDoc) => {
-    const prediction = predictionDoc.data();
+  const predictionList = Array.isArray(predictions) ? predictions : [];
+
+  predictionList.forEach((prediction) => {
     const userId = prediction.userId;
     const fixtureId = prediction.fixtureId;
 
