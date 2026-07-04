@@ -265,6 +265,11 @@ const handlePredict = useCallback(
           nextPrediction,
         ];
       });
+
+      toast.success("Prediction saved successfully!");
+    } catch (error) {
+      console.error("Save prediction failed:", error);
+      toast.error(error.message || "Failed to save prediction. Please try again.");
     } finally {
       setSaving((s) => ({
         ...s,
