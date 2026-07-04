@@ -200,17 +200,27 @@ const handlePredict = useCallback(
 
     const sport = room?.sport || 'football';
 
+    // Timeout helper — Firestore setDoc can hang indefinitely on network/quota issues
+    const withTimeout = (promise, ms = 8000) => {
+      const timer = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Save timed out. Check your connection and try again.')), ms)
+      );
+      return Promise.race([promise, timer]);
+    };
+
     try {
-      await savePrediction(
-        user.uid,
-        user.displayName || 'You',
-        roomId,
-        fixtureId,
-        outcome,
-        predictedHomeGoals,
-        predictedAwayGoals,
-        sport,
-        extraTimeWinner
+      await withTimeout(
+        savePrediction(
+          user.uid,
+          user.displayName || 'You',
+          roomId,
+          fixtureId,
+          outcome,
+          predictedHomeGoals,
+          predictedAwayGoals,
+          sport,
+          extraTimeWinner
+        )
       );
 
       setPredictions((p) => ({
@@ -266,7 +276,7 @@ const handlePredict = useCallback(
         ];
       });
 
-      toast.success("Prediction saved successfully!");
+      toast.success("Prediction saved!");
     } catch (error) {
       console.error("Save prediction failed:", error);
       toast.error(error.message || "Failed to save prediction. Please try again.");
