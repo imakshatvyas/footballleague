@@ -81,7 +81,7 @@ export default function RoomPage() {
             extraTimeWinner: p.extraTimeWinner || null,
           };
         });
-        setPredictions(predMap);
+        setPredictions((prev) => ({ ...predMap, ...prev }));
 
         const memberNameById = {};
         (memberData || []).forEach((member) => {
