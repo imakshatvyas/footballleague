@@ -1,13 +1,16 @@
 import {
-  doc,
-  setDoc,
   getDocs,
   collection,
   query,
   where,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import { auth } from "../../firebase";
+import { Capacitor } from "@capacitor/core";
+
+const API_BASE = Capacitor.isNativePlatform()
+  ? "https://footballtalks.netlify.app/.netlify/functions"
+  : "/api";
 
 export const savePrediction = async (
   userId,
@@ -19,27 +22,31 @@ export const savePrediction = async (
   awayGoals = 0,
   extraTimeWinner = null
 ) => {
-  const id = `${userId}_${roomId}_${fixtureId}`;
+  // Get the current user's ID token to authenticate the server-side write.
+  // This routes through our Netlify function instead of connecting directly
+  // to firestore.googleapis.com (which ad blockers can block).
+  const idToken = await auth.currentUser.getIdToken();
 
-  await setDoc(
-    doc(db, "predictions", id),
-    {
+  const res = await fetch(`${API_BASE}/savePrediction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      idToken,
       userId,
       displayName,
-
       roomId,
       fixtureId: String(fixtureId),
+      outcome,
+      homeGoals: Number(homeGoals),
+      awayGoals: Number(awayGoals),
+      extraTimeWinner: extraTimeWinner || null,
+    }),
+  });
 
-      prediction: outcome,
-
-      predictedHomeGoals: Number(homeGoals),
-      predictedAwayGoals: Number(awayGoals),
-      extraTimeWinner: extraTimeWinner,
-
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Save failed (${res.status})`);
+  }
 };
 
 
