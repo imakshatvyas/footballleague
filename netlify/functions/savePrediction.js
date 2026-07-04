@@ -1,5 +1,4 @@
-const { db } = require("./firebaseAdmin");
-const { getAuth } = require("firebase-admin/auth");
+const { db, auth } = require("./firebaseAdmin");
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -44,7 +43,6 @@ exports.handler = async (event) => {
     } = JSON.parse(event.body);
 
     // Verify the Firebase ID token so only authenticated users can write
-    const auth = getAuth();
     let decodedToken;
     try {
       decodedToken = await auth.verifyIdToken(idToken);

@@ -1,6 +1,7 @@
 const { initializeApp, cert, getApps } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
+const { getAuth } = require("firebase-admin/auth");
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -34,8 +35,10 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 const messaging = getMessaging();
+const auth = getAuth();
 
 module.exports = {
   db,
   messaging,
+  auth,
 };
