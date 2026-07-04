@@ -280,17 +280,13 @@ export const getRoomLeaderboard = async (roomId, preloadedRoom = null, preloaded
     }
   });
 
-  const roomBonuses = room?.bonuses || {};
-
   return Object.values(statsByUserId)
     .map((stats) => {
       const streaks = getStreaks(stats.completedPredictions);
-      const bonusPoints = roomBonuses[stats.userId] || 0;
 
       return {
         ...stats,
         ...streaks,
-        points: stats.points + bonusPoints,
         accuracy:
           stats.totalPredictions > 0
             ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100)

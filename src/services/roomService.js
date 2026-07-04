@@ -159,33 +159,3 @@ export const leaveRoom = async (roomId, userId) => {
     { merge: true }
   );
 };
-
-export const claimRoomBonus = async (roomId, userId, bonusType, points) => {
-  const roomRef = doc(db, 'rooms', roomId);
-  const roomSnap = await getDoc(roomRef);
-  if (!roomSnap.exists()) {
-    throw new Error('Room not found');
-  }
-
-  const data = roomSnap.data();
-  const bonuses = data.bonuses || {};
-  const claimedBonuses = data.claimedBonuses || {};
-
-  const userClaims = claimedBonuses[userId] || {};
-  if (userClaims[bonusType]) {
-    throw new Error('Bonus already claimed');
-  }
-
-  // Update bonuses map
-  bonuses[userId] = (bonuses[userId] || 0) + points;
-  
-  // Mark as claimed
-  userClaims[bonusType] = true;
-  claimedBonuses[userId] = userClaims;
-
-  await updateDoc(roomRef, {
-    bonuses,
-    claimedBonuses,
-  });
-};
-

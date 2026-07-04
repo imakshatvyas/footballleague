@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { getRoom, getRoomMembers, leaveRoom, claimRoomBonus } from '../services/roomService';
+import { getRoom, getRoomMembers, leaveRoom } from '../services/roomService';
 import { getTournamentMatches, getRecentResults } from '../services/matchService';
 import { getRoomPredictions, getUserPredictions, savePrediction } from '../services/predictionService';
 import { getRoomLeaderboard } from '../services/leaderboardService';
@@ -38,10 +38,6 @@ export default function RoomPage() {
   const [saving,      setSaving]      = useState({});
   const [infoOpen,    setInfoOpen]    = useState(false);
   const [competitionFilter, setCompetitionFilter] = useState('All');
-
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [activeBonus, setActiveBonus] = useState(null);
-  const [claimingBonus, setClaimingBonus] = useState(false);
 
   // ── Load all room data ──────────────────────────────
   useEffect(() => {
@@ -186,59 +182,7 @@ export default function RoomPage() {
       cancelled = true;
       clearInterval(refreshId);
     };
-  }, [roomId, user, refreshTrigger]);
-
-  // ── Check Room Point Bonuses ─────────────────────────
-  useEffect(() => {
-    if (!room || !leaderboard || !user) return;
-
-    const isFootballTalks = room.name?.toLowerCase().includes("football talks");
-    if (!isFootballTalks) return;
-
-    const userLb = leaderboard.find((entry) => entry.userId === user.uid);
-    const userMember = members.find((m) => m.uid === user.uid);
-    const displayName = userMember?.displayName || user?.displayName || "";
-
-    const claimed = room.claimedBonuses?.[user.uid] || {};
-    const claimedAmount = room.bonuses?.[user.uid] || 0;
-
-    // Calculate base points before any claimed room bonuses
-    const basePoints = (userLb ? userLb.points : 0) - claimedAmount;
-
-    if (basePoints <= 4 && !claimed.competitive) {
-      setActiveBonus({
-        type: 'competitive',
-        points: 4,
-        title: 'Make Game Competitive Bonus',
-        description: `Since you currently have ${basePoints} points, you are eligible for a 4-point bonus to make the game more competitive!`
-      });
-    } else if (displayName.toLowerCase() === 'hritik' && basePoints === 10 && !claimed.hritik) {
-      setActiveBonus({
-        type: 'hritik',
-        points: 2,
-        title: 'Hritik Special Bonus',
-        description: 'Hey Hritik! Since you have exactly 10 points, you qualify for an exclusive 2-point bonus!'
-      });
-    } else {
-      setActiveBonus(null);
-    }
-  }, [room, leaderboard, user, members]);
-
-  const handleClaimBonus = async () => {
-    if (!activeBonus || !room || !user) return;
-    setClaimingBonus(true);
-    try {
-      await claimRoomBonus(roomId, user.uid, activeBonus.type, activeBonus.points);
-      toast.success(`Successfully claimed ${activeBonus.title}!`);
-      setActiveBonus(null);
-      setRefreshTrigger(prev => prev + 1);
-    } catch (error) {
-      console.error("Failed to claim bonus:", error);
-      toast.error(error.message || "Failed to claim bonus");
-    } finally {
-      setClaimingBonus(false);
-    }
-  };
+  }, [roomId, user]);
 
   // ── Predict ─────────────────────────────────────────
 const handlePredict = useCallback(
@@ -479,28 +423,6 @@ const handlePredict = useCallback(
           <ChatWindow roomId={roomId} user={user} />
         )}
       </div>
-
-      {/* ── Bonus Claim Modal ── */}
-      {activeBonus && (
-        <div className="bonus-modal-overlay">
-          <div className="bonus-modal-card">
-            <div className="bonus-modal-badge">🎁 SPECIAL BONUS</div>
-            <h2 className="bonus-modal-title">{activeBonus.title}</h2>
-            <p className="bonus-modal-desc">{activeBonus.description}</p>
-            <div className="bonus-modal-points">
-              <span className="bonus-points-val">+{activeBonus.points}</span>
-              <span className="bonus-points-lbl">Points</span>
-            </div>
-            <button
-              className="bonus-claim-btn"
-              disabled={claimingBonus}
-              onClick={handleClaimBonus}
-            >
-              {claimingBonus ? "Claiming..." : "Claim Now 🚀"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
