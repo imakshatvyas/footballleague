@@ -384,9 +384,20 @@ export const calculateUserStats = async (userId) => {
     return leaderboard[0]?.userId === userId;
   }, Promise.resolve(false));
 
-  const totalPoints = finishedHistory.reduce((sum, p) => sum + p.points, 0);
-  const fPoints = footballHistory.reduce((sum, p) => sum + p.points, 0);
-  const cPoints = cricketHistory.reduce((sum, p) => sum + p.points, 0);
+  let fBonus = 0;
+  let cBonus = 0;
+  rooms.forEach((room) => {
+    const bonus = room.bonuses?.[userId] || 0;
+    if ((room.sport || 'football') === 'cricket') {
+      cBonus += bonus;
+    } else {
+      fBonus += bonus;
+    }
+  });
+
+  const totalPoints = finishedHistory.reduce((sum, p) => sum + p.points, 0) + fBonus + cBonus;
+  const fPoints = footballHistory.reduce((sum, p) => sum + p.points, 0) + fBonus;
+  const cPoints = cricketHistory.reduce((sum, p) => sum + p.points, 0) + cBonus;
 
   const correctWinnerPredictions = finishedHistory.filter((p) => p.correctWinner).length;
   const fCorrectWinners = footballHistory.filter((p) => p.correctWinner).length;

@@ -145,13 +145,17 @@ export const getRoomLeaderboard = async (roomId, preloadedRoom = null, preloaded
     statsByUserId[userId].points += 1; // 1 point for correct winner, 0 otherwise. No exact score bonus.
   });
 
+  const roomBonuses = room?.bonuses || {};
+
   return Object.values(statsByUserId)
     .map((stats) => {
       const streaks = getStreaks(stats.completedPredictions);
+      const bonusPoints = roomBonuses[stats.userId] || 0;
 
       return {
         ...stats,
         ...streaks,
+        points: stats.points + bonusPoints,
         accuracy:
           stats.totalPredictions > 0
             ? Math.round((stats.correctPredictions / stats.totalPredictions) * 100)
