@@ -1,8 +1,11 @@
 import {
+  doc,
+  setDoc,
   getDocs,
   collection,
   query,
   where,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { auth } from "../../firebase";
@@ -22,33 +25,66 @@ export const savePrediction = async (
   awayGoals = 0,
   extraTimeWinner = null
 ) => {
-  // Get the current user's ID token to authenticate the server-side write.
-  // This routes through our Netlify function instead of connecting directly
-  // to firestore.googleapis.com (which ad blockers can block).
-  const idToken = await auth.currentUser.getIdToken();
+  const finalDisplayName =
+    displayName ||
+    auth.currentUser?.displayName ||
+    auth.currentUser?.email ||
+    "Player";
 
-  const res = await fetch(`${API_BASE}/savePrediction`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      idToken,
-      userId,
-      displayName,
-      roomId,
-      fixtureId: String(fixtureId),
-      outcome,
-      homeGoals: Number(homeGoals),
-      awayGoals: Number(awayGoals),
-      extraTimeWinner: extraTimeWinner || null,
-    }),
-  });
+  const predictionPayload = {
+    userId,
+    displayName: finalDisplayName,
+    roomId,
+    fixtureId: String(fixtureId),
+    prediction: outcome,
+    predictedHomeGoals: Number(homeGoals),
+    predictedAwayGoals: Number(awayGoals),
+    extraTimeWinner: extraTimeWinner || null,
+  };
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Save failed (${res.status})`);
+  const saveDirectlyToFirestore = () => {
+    const id = `${userId}_${roomId}_${fixtureId}`;
+
+    return setDoc(
+      doc(db, "predictions", id),
+      {
+        ...predictionPayload,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  };
+
+  const idToken = await auth.currentUser?.getIdToken();
+
+  if (!idToken) {
+    return saveDirectlyToFirestore();
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/savePrediction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        idToken,
+        ...predictionPayload,
+        outcome,
+        homeGoals: Number(homeGoals),
+        awayGoals: Number(awayGoals),
+      }),
+    });
+
+    if (!res.ok) {
+      console.warn("savePrediction function failed; falling back to Firestore", res.status);
+      return saveDirectlyToFirestore();
+    }
+
+    return undefined;
+  } catch (error) {
+    console.warn("savePrediction function unavailable; falling back to Firestore", error);
+    return saveDirectlyToFirestore();
   }
 };
-
 
 export const getUserPredictions = async (userId, roomId) => {
   const q = query(
