@@ -203,21 +203,31 @@ export default function RoomInfoSheet({
           <span>Room Settings</span>
         </div>
 
-        {confirmingLeave ? (
-          <div className="room-sheet-leave-confirm" role="alertdialog" aria-label="Confirm leaving room">
-            <strong>Leave this room?</strong>
-            <p>You will lose access to this room. Your name will remain in its member list as “(Left) Name”.</p>
-            <div>
-              <button type="button" onClick={() => setConfirmingLeave(false)} disabled={leaving}>Cancel</button>
-              <button type="button" onClick={handleLeave} disabled={leaving}>{leaving ? 'Leaving…' : 'Yes, leave room'}</button>
-            </div>
-          </div>
-        ) : (
-          <button className="room-sheet-leave" type="button" onClick={() => setConfirmingLeave(true)}>
-            Leave Room
-          </button>
-        )}
+        <button className="room-sheet-leave" type="button" onClick={() => setConfirmingLeave(true)}>
+          Leave Room
+        </button>
       </section>
+
+      {confirmingLeave && (
+        <div className="leave-confirmation-layer" role="presentation">
+          <button
+            className="leave-confirmation-layer__scrim"
+            type="button"
+            aria-label="Cancel leaving room"
+            disabled={leaving}
+            onClick={() => setConfirmingLeave(false)}
+          />
+          <section className="leave-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="leave-confirmation-title">
+            <div className="leave-confirmation-dialog__icon" aria-hidden="true">!</div>
+            <h3 id="leave-confirmation-title">Leave this room?</h3>
+            <p>You will lose access to this room and it will be removed from your room list. Your member record will be labelled “(Left)”.</p>
+            <div className="leave-confirmation-dialog__actions">
+              <button type="button" onClick={() => setConfirmingLeave(false)} disabled={leaving}>Cancel</button>
+              <button type="button" onClick={handleLeave} disabled={leaving}>{leaving ? 'Leaving…' : 'Leave room'}</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

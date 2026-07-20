@@ -217,7 +217,7 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
 
       {tournamentComplete ? (
         <div className="hero-champions" aria-label="World Cup champions">
-          <img className="hero-champions__flag" src="/spain-flag.svg" alt="Spain flag" />
+          <img className="hero-champions__flag" src="/spain-flag.jpg" alt="Spain flag" />
           <span className="hero-champions__eyebrow">World Cup 2026</span>
           <strong>Spain</strong>
           <span className="hero-champions__title">World Cup Champions</span>

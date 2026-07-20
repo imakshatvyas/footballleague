@@ -6,7 +6,6 @@ import {
   getDocs,
   updateDoc,
   setDoc,
-  writeBatch,
   arrayUnion,
   arrayRemove,
   serverTimestamp,
@@ -180,15 +179,10 @@ export const leaveRoom = async (roomId, userId) => {
     };
   });
 
-  // Keep a marked record in the room roster while removing the room from the
-  // former member's dashboard.
-  const batch = writeBatch(db);
-  batch.update(roomRef, {
-    members: nextMembers,
-    memberIds: arrayRemove(userId),
-  });
-
-  batch.set(
+  // A Firestore batch is all-or-nothing. Existing rules can allow a user to
+  // update their own profile but reject a shared room update, which otherwise
+  // stops the user from leaving altogether. Remove their own room entry first.
+  await setDoc(
     doc(db, 'users', userId),
     {
       rooms: arrayRemove(roomId),
@@ -196,5 +190,14 @@ export const leaveRoom = async (roomId, userId) => {
     { merge: true }
   );
 
-  await batch.commit();
+  try {
+    await updateDoc(roomRef, {
+      members: nextMembers,
+      memberIds: arrayRemove(userId),
+    });
+    return { rosterUpdated: true };
+  } catch (error) {
+    console.warn('User left the room, but the member roster could not be updated:', error);
+    return { rosterUpdated: false };
+  }
 };

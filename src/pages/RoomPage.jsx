@@ -16,7 +16,7 @@ import MatchReview from '../components/MatchReview';
 import MatchDetailsPanel from '../components/MatchDetailsPanel';
 import './RoomPage.css';
 
-const TABS = ['Home', 'Predict', 'Standings', 'Results', 'Members', 'Chat'];
+const TABS = ['Home', 'Standings', 'Results', 'Members', 'Chat'];
 
 export default function RoomPage() {
   const { roomId } = useParams();
@@ -57,6 +57,16 @@ export default function RoomPage() {
         const roomData = cachedRoomData;
         if (!roomData) {
           if (!cancelled) setLoading(false);
+          return;
+        }
+
+        // A member who has left cannot reopen a saved room URL.
+        if (!roomData.memberIds?.includes(user.uid)) {
+          if (!cancelled) {
+            toast.error('You are no longer a member of this room');
+            navigate('/', { replace: true });
+            setLoading(false);
+          }
           return;
         }
         const sport = roomData.sport || 'football';
@@ -213,7 +223,7 @@ export default function RoomPage() {
       cancelled = true;
       clearInterval(refreshId);
     };
-  }, [roomId, user]);
+  }, [navigate, roomId, user]);
 
   // ── Predict ─────────────────────────────────────────
 const handlePredict = useCallback(
@@ -323,9 +333,12 @@ const handlePredict = useCallback(
 
   const handleLeaveRoom = useCallback(async () => {
     try {
-      await leaveRoom(roomId, user.uid);
+      const result = await leaveRoom(roomId, user.uid);
       setInfoOpen(false);
       toast.success('You left the room');
+      if (!result?.rosterUpdated) {
+        toast('Your room access was removed. The member list needs an updated Firestore room permission to show “(Left)”.');
+      }
       navigate('/');
     } catch (error) {
       console.error('Leave room failed:', error);
@@ -405,9 +418,7 @@ const handlePredict = useCallback(
       {/* ── Tab content ── */}
       <div className="room-content">
 
-        {tab === 'Home' && <RoomHome onShowPredictions={() => setTab('Predict')} />}
-
-        {tab === 'Predict' && (
+        {tab === 'Home' && (
           <div className="animate-fade-up">
             <TournamentCelebration champion={leaderboard[0] || null} />
             {liveMatch && (
@@ -454,6 +465,8 @@ const handlePredict = useCallback(
                 <MiniLeaderboard entries={leaderboard.slice(0, 5)} currentUserId={user.uid} />
               </>
             )}
+
+            <RoomHome />
           </div>
         )}
 
@@ -990,7 +1003,7 @@ function TournamentCelebration({ champion, compact = false }) {
           />
         ))}
       </div>
-      <img className="tournament-celebration__flag" src="/spain-flag.svg" alt="Spain flag" />
+      <img className="tournament-celebration__flag" src="/spain-flag.jpg" alt="Spain flag" />
       <div className="tournament-celebration__content">
         <span className="tournament-celebration__eyebrow">World Cup 2026</span>
         <strong>Spain are World Cup Champions</strong>
@@ -1003,7 +1016,7 @@ function TournamentCelebration({ champion, compact = false }) {
   );
 }
 
-function RoomHome({ onShowPredictions }) {
+function RoomHome() {
   const currentYear = new Date().getFullYear();
   const season = `${currentYear}/${String(currentYear + 1).slice(-2)}`;
   const events = [
@@ -1016,12 +1029,6 @@ function RoomHome({ onShowPredictions }) {
 
   return (
     <div className="room-home animate-fade-up">
-      <section className="room-home__intro">
-        <p className="section-label">Room home</p>
-        <h2>What’s coming up</h2>
-        <p>Follow the next major football and cricket events, then make predictions when fixtures open.</p>
-        <button className="btn btn-primary" type="button" onClick={onShowPredictions}>View predictions</button>
-      </section>
       <section className="room-home__timeline" aria-label="Upcoming events timeline">
         <div className="room-home__timeline-heading">
           <h3>Upcoming events</h3>

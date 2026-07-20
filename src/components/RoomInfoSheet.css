@@ -192,21 +192,55 @@
   cursor: pointer;
 }
 
-.room-sheet-leave-confirm {
-  margin-top: 14px;
-  padding: 14px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 14px;
-  background: rgba(127, 29, 29, 0.18);
+.leave-confirmation-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  display: grid;
+  place-items: center;
+  padding: 20px;
 }
 
-.room-sheet-leave-confirm strong { color: #fff; font-size: 14px; }
-.room-sheet-leave-confirm p { margin: 6px 0 12px; color: rgba(255, 255, 255, .66); font-size: 12px; line-height: 1.4; }
-.room-sheet-leave-confirm > div { display: flex; gap: 8px; }
-.room-sheet-leave-confirm button { flex: 1; min-height: 40px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 800; }
-.room-sheet-leave-confirm button:first-child { background: rgba(255, 255, 255, .1); color: #fff; }
-.room-sheet-leave-confirm button:last-child { background: #dc2626; color: #fff; }
-.room-sheet-leave-confirm button:disabled { cursor: wait; opacity: .65; }
+.leave-confirmation-layer__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, .68);
+  backdrop-filter: blur(5px);
+}
+
+.leave-confirmation-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 360px);
+  padding: 24px;
+  border: 1px solid rgba(239, 68, 68, .34);
+  border-radius: 20px;
+  background: #18131a;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, .58);
+  text-align: center;
+}
+
+.leave-confirmation-dialog__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, .17);
+  color: #ff7777;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.leave-confirmation-dialog h3 { margin: 0; color: #fff; font-size: 19px; }
+.leave-confirmation-dialog p { margin: 9px 0 20px; color: rgba(255, 255, 255, .65); font-size: 13px; line-height: 1.45; }
+.leave-confirmation-dialog__actions { display: flex; gap: 10px; }
+.leave-confirmation-dialog__actions button { flex: 1; min-height: 43px; border: 0; border-radius: 11px; cursor: pointer; font-size: 13px; font-weight: 900; }
+.leave-confirmation-dialog__actions button:first-child { background: rgba(255, 255, 255, .1); color: #fff; }
+.leave-confirmation-dialog__actions button:last-child { background: #dc2626; color: #fff; }
+.leave-confirmation-dialog__actions button:disabled { cursor: wait; opacity: .65; }
 
 @media (max-width: 520px) {
   .room-info-sheet {
