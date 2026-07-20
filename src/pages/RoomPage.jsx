@@ -333,12 +333,9 @@ const handlePredict = useCallback(
 
   const handleLeaveRoom = useCallback(async () => {
     try {
-      const result = await leaveRoom(roomId, user.uid);
+      await leaveRoom(roomId);
       setInfoOpen(false);
       toast.success('You left the room');
-      if (!result?.rosterUpdated) {
-        toast('Your room access was removed. The member list needs an updated Firestore room permission to show “(Left)”.');
-      }
       navigate('/');
     } catch (error) {
       console.error('Leave room failed:', error);

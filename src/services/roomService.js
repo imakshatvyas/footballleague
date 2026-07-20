@@ -7,12 +7,17 @@ import {
   updateDoc,
   setDoc,
   arrayUnion,
-  arrayRemove,
   serverTimestamp,
   query,
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { auth } from './firebase';
+import { Capacitor } from '@capacitor/core';
+
+const API_BASE = Capacitor.isNativePlatform()
+  ? 'https://footballtalks.netlify.app/.netlify/functions'
+  : '/api';
 
 export const createRoom = async (userId, displayName, roomName, sport = 'football') => {
   const code = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -157,47 +162,27 @@ export const getRoomMembers = async (roomId) => {
   return snap.data().members || [];
 };
 
-export const leaveRoom = async (roomId, userId) => {
-  const roomRef = doc(db, 'rooms', roomId);
-  const roomSnap = await getDoc(roomRef);
+export const leaveRoom = async (roomId) => {
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) throw new Error('Please sign in again before leaving the room.');
 
-  if (!roomSnap.exists()) {
-    throw new Error('Room not found');
-  }
-
-  const members = roomSnap.data().members || [];
-  const nextMembers = members.map((member) => {
-    if (member.uid !== userId) return member;
-
-    const originalDisplayName = member.originalDisplayName || member.displayName || 'Player';
-    return {
-      ...member,
-      displayName: `(left) ${originalDisplayName.replace(/^\(left\)\s*/i, '')}`,
-      originalDisplayName: originalDisplayName.replace(/^\(left\)\s*/i, ''),
-      left: true,
-      leftAt: new Date(),
-    };
-  });
-
-  // A Firestore batch is all-or-nothing. Existing rules can allow a user to
-  // update their own profile but reject a shared room update, which otherwise
-  // stops the user from leaving altogether. Remove their own room entry first.
-  await setDoc(
-    doc(db, 'users', userId),
-    {
-      rooms: arrayRemove(roomId),
-    },
-    { merge: true }
-  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12_000);
 
   try {
-    await updateDoc(roomRef, {
-      members: nextMembers,
-      memberIds: arrayRemove(userId),
+    const response = await fetch(`${API_BASE}/leaveRoom`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, roomId }),
+      signal: controller.signal,
     });
-    return { rosterUpdated: true };
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body.error || `Unable to leave room (${response.status})`);
+    return body;
   } catch (error) {
-    console.warn('User left the room, but the member roster could not be updated:', error);
-    return { rosterUpdated: false };
+    if (error.name === 'AbortError') throw new Error('Leaving the room timed out. Please check your connection and try again.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 };
