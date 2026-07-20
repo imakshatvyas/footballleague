@@ -324,6 +324,7 @@ const handlePredict = useCallback(
   const handleLeaveRoom = useCallback(async () => {
     try {
       await leaveRoom(roomId, user.uid);
+      setInfoOpen(false);
       toast.success('You left the room');
       navigate('/');
     } catch (error) {
@@ -416,13 +417,16 @@ const handlePredict = useCallback(
               <div className="empty-state">
                 <div className="empty-state__icon">📅</div>
                 <div className="empty-state__title">No live or upcoming fixtures</div>
-                <div className="empty-state__subtitle">Check another filter or come back soon.</div>
+                <div className="empty-state__subtitle">More new fixtures to come soon as IPL, Premier League, and La Liga. Keep checking!</div>
               </div>
             ) : (
               <>
                 <p className="section-label" style={{ marginTop: 20 }}>
                   Live and upcoming matches
                 </p>
+                <div className="upcoming-notice" style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  More new fixtures to come soon as IPL, Premier League, and La Liga. Keep checking!
+                </div>
                 <div className="prediction-list">
                   {displayedFixtures.map((fixture, i) => (
                     <PredictionCard

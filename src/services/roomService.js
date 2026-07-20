@@ -173,8 +173,8 @@ export const leaveRoom = async (roomId, userId) => {
     const originalDisplayName = member.originalDisplayName || member.displayName || 'Player';
     return {
       ...member,
-      displayName: `(Left) ${originalDisplayName.replace(/^\(Left\)\s*/i, '')}`,
-      originalDisplayName: originalDisplayName.replace(/^\(Left\)\s*/i, ''),
+      displayName: `(left) ${originalDisplayName.replace(/^\(left\)\s*/i, '')}`,
+      originalDisplayName: originalDisplayName.replace(/^\(left\)\s*/i, ''),
       left: true,
       leftAt: new Date(),
     };
