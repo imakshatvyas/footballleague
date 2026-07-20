@@ -85,6 +85,13 @@ const getCricketResult = (fixture) => {
 const getResult = (fixture, sport) =>
   sport === 'cricket' ? getCricketResult(fixture) : getFootballResult(fixture);
 
+const getEffectivePrediction = (prediction) => {
+  if (prediction.prediction === 'draw' && prediction.extraTimeWinner && prediction.extraTimeWinner !== 'draw') {
+    return prediction.extraTimeWinner;
+  }
+  return prediction.prediction;
+};
+
 const getPredictionScoreLabel = (prediction, fixture, sport) => {
   const homeName = fixture?.teams?.home?.name || 'Home';
   const awayName = fixture?.teams?.away?.name || 'Away';
@@ -95,11 +102,16 @@ const getPredictionScoreLabel = (prediction, fixture, sport) => {
     return 'Draw';
   }
 
-  return `${homeName} ${toNumber(prediction.predictedHomeGoals) ?? 0}-${toNumber(prediction.predictedAwayGoals) ?? 0} ${awayName}`;
+  let label = `${homeName} ${toNumber(prediction.predictedHomeGoals) ?? 0}-${toNumber(prediction.predictedAwayGoals) ?? 0} ${awayName}`;
+  if (prediction.prediction === 'draw' && prediction.extraTimeWinner && prediction.extraTimeWinner !== 'draw') {
+    const etWinnerName = prediction.extraTimeWinner === 'home' ? homeName : awayName;
+    label += ` (${etWinnerName} ET/Pens)`;
+  }
+  return label;
 };
 
 const scorePrediction = (prediction, fixture, result, sport) => {
-  const predictedWinner = prediction.prediction;
+  const predictedWinner = getEffectivePrediction(prediction);
   const correctWinner =
     (predictedWinner === 'home' || predictedWinner === 'away' || predictedWinner === 'draw') &&
     predictedWinner === result.winner;
@@ -135,15 +147,15 @@ const sortReviewedPredictions = (predictions, currentUserId) => {
   });
 };
 
-export const getMatchReview = async ({ fixture, roomId, currentUserId, sport = 'football' }) => {
+export const getMatchReview = async ({ fixture, roomId, currentUserId, sport = 'football', roomPredictions: preloadedPredictions = null, members: preloadedMembers = null }) => {
   if (!fixture || !roomId) {
     return null;
   }
 
   const fixtureId = String(fixture.fixture?.id);
   const [roomPredictions, members] = await Promise.all([
-    getRoomPredictions(roomId, sport),
-    getRoomMembers(roomId),
+    preloadedPredictions ? Promise.resolve(preloadedPredictions) : getRoomPredictions(roomId, sport),
+    preloadedMembers ? Promise.resolve(preloadedMembers) : getRoomMembers(roomId),
   ]);
 
   const memberNameById = {};
@@ -158,6 +170,7 @@ export const getMatchReview = async ({ fixture, roomId, currentUserId, sport = '
 
   const predictions = fixturePredictions.map((prediction) => {
     const scored = scorePrediction(prediction, fixture, result, sport);
+    const effectivePrediction = getEffectivePrediction(prediction);
 
     return {
       id: prediction.id || `${prediction.userId}_${fixtureId}`,
@@ -166,7 +179,7 @@ export const getMatchReview = async ({ fixture, roomId, currentUserId, sport = '
         prediction.displayName ||
         memberNameById[prediction.userId] ||
         (prediction.userId === currentUserId ? 'You' : 'Player'),
-      prediction: prediction.prediction,
+      prediction: effectivePrediction,
       predictedHomeGoals: toNumber(prediction.predictedHomeGoals) ?? 0,
       predictedAwayGoals: toNumber(prediction.predictedAwayGoals) ?? 0,
       isCurrentUser: prediction.userId === currentUserId,

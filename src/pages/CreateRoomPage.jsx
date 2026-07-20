@@ -9,7 +9,6 @@ export default function CreateRoomPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState('');
-  const [sport, setSport] = useState('football');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async (e) => {
@@ -17,7 +16,7 @@ export default function CreateRoomPage() {
     if (!name.trim()) return;
     setLoading(true);
     try {
-      const { id, code } = await createRoom(user.uid, user.displayName, name.trim(), sport);
+      const { id, code } = await createRoom(user.uid, user.displayName, name.trim(), 'football');
       toast.success(`Room created! Code: ${code}`);
       navigate(`/room/${id}`);
     } catch (err) {
@@ -45,30 +44,6 @@ export default function CreateRoomPage() {
             required
             autoFocus
           />
-
-          <div className="sport-selector">
-            <label className="sport-title">Select Sport</label>
-            <div className="sport-options">
-              <button
-                type="button"
-                className={`sport-card ${sport === 'football' ? 'active' : ''}`}
-                onClick={() => setSport('football')}
-              >
-                <div className="sport-emoji">⚽</div>
-                <div className="sport-name">Football</div>
-                <div className="sport-desc">Predict goals & winner</div>
-              </button>
-              <button
-                type="button"
-                className={`sport-card ${sport === 'cricket' ? 'active' : ''}`}
-                onClick={() => setSport('cricket')}
-              >
-                <div className="sport-emoji">🏏</div>
-                <div className="sport-name">Cricket</div>
-                <div className="sport-desc">Predict match winner</div>
-              </button>
-            </div>
-          </div>
 
           <button className="btn btn-primary btn-lg" type="submit" disabled={loading || !name.trim()}>
             {loading ? <span className="login-spinner" /> : 'Create room'}

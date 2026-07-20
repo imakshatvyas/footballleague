@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   setDoc,
+  writeBatch,
   arrayUnion,
   arrayRemove,
   serverTimestamp,
@@ -72,13 +73,35 @@ export const joinRoom = async (userId, displayName, code) => {
     };
   }
 
+  // Re-activate a previously left member in place, so the room roster does not
+  // accumulate duplicate entries when someone comes back.
+  const existingMember = (data.members || []).find((member) => member.uid === userId);
+  const members = existingMember
+    ? (data.members || []).map((member) => (
+      member.uid === userId
+        ? {
+            ...member,
+            displayName: member.originalDisplayName || displayName,
+            originalDisplayName: member.originalDisplayName || displayName,
+            left: false,
+            leftAt: null,
+          }
+        : member
+    ))
+    : [
+        ...(data.members || []),
+        {
+          uid: userId,
+          displayName,
+          originalDisplayName: displayName,
+          joinedAt: new Date(),
+          left: false,
+        },
+      ];
+
   // Update room members
   await updateDoc(doc(db, 'rooms', roomDoc.id), {
-    members: arrayUnion({
-      uid: userId,
-      displayName,
-      joinedAt: new Date(),
-    }),
+    members,
     memberIds: arrayUnion(userId),
   });
 
@@ -144,18 +167,34 @@ export const leaveRoom = async (roomId, userId) => {
   }
 
   const members = roomSnap.data().members || [];
-  const nextMembers = members.filter((member) => member.uid !== userId);
+  const nextMembers = members.map((member) => {
+    if (member.uid !== userId) return member;
 
-  await updateDoc(roomRef, {
+    const originalDisplayName = member.originalDisplayName || member.displayName || 'Player';
+    return {
+      ...member,
+      displayName: `(Left) ${originalDisplayName.replace(/^\(Left\)\s*/i, '')}`,
+      originalDisplayName: originalDisplayName.replace(/^\(Left\)\s*/i, ''),
+      left: true,
+      leftAt: new Date(),
+    };
+  });
+
+  // Keep a marked record in the room roster while removing the room from the
+  // former member's dashboard.
+  const batch = writeBatch(db);
+  batch.update(roomRef, {
     members: nextMembers,
     memberIds: arrayRemove(userId),
   });
 
-  await setDoc(
+  batch.set(
     doc(db, 'users', userId),
     {
       rooms: arrayRemove(roomId),
     },
     { merge: true }
   );
+
+  await batch.commit();
 };

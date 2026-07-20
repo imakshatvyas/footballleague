@@ -22,20 +22,30 @@ const buildFinishedMatchMap = (matches) =>
     return matchMap;
   }, new Map());
 
-const createEmptyStats = (userId, displayName) => ({
-  userId,
-  displayName,
-  points: 0,
-  correctPredictions: 0,
-  exactScorePredictions: 0,
-  totalPredictions: 0,
-  accuracy: 0,
-  exactScoreAccuracy: 0,
-  currentStreak: 0,
-  bestStreak: 0,
-  movement: 0,
-  completedPredictions: [],
-});
+const createEmptyStats = (userId, displayName) => {
+  let initialPoints = 0;
+  const lowerName = (displayName || "").toLowerCase();
+  if (lowerName === "akshat vyas") {
+    initialPoints += 1;
+  } else if (lowerName === "hritik") {
+    initialPoints += 2;
+  }
+
+  return {
+    userId,
+    displayName,
+    points: initialPoints,
+    correctPredictions: 0,
+    exactScorePredictions: 0,
+    totalPredictions: 0,
+    accuracy: 0,
+    exactScoreAccuracy: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    movement: 0,
+    completedPredictions: [],
+  };
+};
 
 const getStreaks = (completedPredictions) => {
   const oldestFirst = completedPredictions

@@ -42,23 +42,10 @@ export const savePrediction = async (
     extraTimeWinner: extraTimeWinner || null,
   };
 
-  const saveDirectlyToFirestore = () => {
-    const id = `${userId}_${roomId}_${fixtureId}`;
-
-    return setDoc(
-      doc(db, "predictions", id),
-      {
-        ...predictionPayload,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  };
-
   const idToken = await auth.currentUser?.getIdToken();
 
   if (!idToken) {
-    return saveDirectlyToFirestore();
+    throw new Error("Please sign in again before saving a prediction.");
   }
 
   try {
@@ -75,14 +62,20 @@ export const savePrediction = async (
     });
 
     if (!res.ok) {
-      console.warn("savePrediction function failed; falling back to Firestore", res.status);
-      return saveDirectlyToFirestore();
+      let errorMessage = `Save failed (${res.status})`;
+      try {
+        const errorBody = await res.json();
+        errorMessage = errorBody.error || errorBody.message || errorMessage;
+      } catch {
+        // keep default message
+      }
+      throw new Error(errorMessage);
     }
 
     return undefined;
   } catch (error) {
-    console.warn("savePrediction function unavailable; falling back to Firestore", error);
-    return saveDirectlyToFirestore();
+    console.warn("savePrediction failed", error);
+    throw error;
   }
 };
 

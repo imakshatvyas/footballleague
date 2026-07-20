@@ -51,7 +51,7 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savingTeam, setSavingTeam] = useState(false);
-  const [activeTab, setActiveTab] = useState('football');
+  const activeTab = 'football';
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [modalSportFilter, setModalSportFilter] = useState('all');
   const [modalPage, setModalPage] = useState(1);
@@ -92,11 +92,7 @@ export default function ProfilePage() {
   const history = profileData?.history || [];
   const favoriteTeam = stats?.favoriteTeam;
 
-  const activeStats = useMemo(() => {
-    if (activeTab === 'football') return profileData?.footballStats;
-    if (activeTab === 'cricket') return profileData?.cricketStats;
-    return profileData?.stats;
-  }, [activeTab, profileData]);
+  const activeStats = useMemo(() => profileData?.footballStats || profileData?.stats, [profileData]);
 
   const statCards = useMemo(() => {
     const cards = [
@@ -209,22 +205,6 @@ export default function ProfilePage() {
       <section className="profile-section">
         <div className="profile-stats-header">
           <p className="section-label">Prediction statistics</p>
-          <div className="stats-tabs">
-            <button
-              className={`stats-tab ${activeTab === 'football' ? 'stats-tab--active' : ''}`}
-              onClick={() => setActiveTab('football')}
-              type="button"
-            >
-              Football
-            </button>
-            <button
-              className={`stats-tab ${activeTab === 'cricket' ? 'stats-tab--active' : ''}`}
-              onClick={() => setActiveTab('cricket')}
-              type="button"
-            >
-              Cricket
-            </button>
-          </div>
         </div>
         <div className="profile-stat-grid">
           {statCards.map((card, index) => (
@@ -311,6 +291,7 @@ export default function ProfilePage() {
                 <div className="history-score">
                   <span>
                     Predicted {prediction.predictedHomeGoals}-{prediction.predictedAwayGoals}
+                    {prediction.extraTimeWinner && prediction.extraTimeWinner !== 'draw' ? ` (${prediction.extraTimeWinner === 'home' ? prediction.homeTeam : prediction.awayTeam} ET/Pens)` : ''}
                   </span>
                   <span>
                     Actual{' '}
@@ -374,12 +355,6 @@ export default function ProfilePage() {
               >
                 ⚽ Football
               </button>
-              <button
-                className={`modal-filter-btn ${modalSportFilter === 'cricket' ? 'active' : ''}`}
-                onClick={() => { setModalSportFilter('cricket'); setModalPage(1); }}
-              >
-                🏏 Cricket
-              </button>
             </div>
 
             <div className="history-modal-list">
@@ -396,6 +371,7 @@ export default function ProfilePage() {
                     <div className="history-score">
                       <span>
                         Predicted {prediction.predictedHomeGoals}-{prediction.predictedAwayGoals}
+                        {prediction.extraTimeWinner && prediction.extraTimeWinner !== 'draw' ? ` (${prediction.extraTimeWinner === 'home' ? prediction.homeTeam : prediction.awayTeam} ET/Pens)` : ''}
                       </span>
                       <span>
                         Actual {prediction.actualHomeGoals}-{prediction.actualAwayGoals}

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getRoom, getRoomMembers, leaveRoom } from '../services/roomService';
-import { getTournamentMatches, getRecentResults } from '../services/matchService';
+import { getTournamentMatches } from '../services/matchService';
 import { getRoomPredictions, getUserPredictions, savePrediction } from '../services/predictionService';
 import { getRoomLeaderboard } from '../services/leaderboardService';
 import HeroMatch from '../components/HeroMatch';
@@ -13,7 +13,7 @@ import ProgressCard from '../components/ProgressCard';
 import RoomInfoSheet from '../components/RoomInfoSheet';
 import ChatWindow from '../components/Chat/ChatWindow';
 import MatchReview from '../components/MatchReview';
-import CricketFilterBar, { filterCricketFixtures } from '../components/CricketFilterBar';
+import MatchDetailsPanel from '../components/MatchDetailsPanel';
 import './RoomPage.css';
 
 const TABS = ['Predict', 'Standings', 'Results', 'Members', 'Chat'];
@@ -45,71 +45,102 @@ export default function RoomPage() {
     let cancelled = false;
     let firstLoad = true;
 
+    let cachedRoomData = null;
+    let cachedRoomPredData = null;
+
     const load = async () => {
       if (firstLoad) setLoading(true);
       try {
-        const roomData = await getRoom(roomId);
+        if (!cachedRoomData) {
+          cachedRoomData = await getRoom(roomId);
+        }
+        const roomData = cachedRoomData;
         if (!roomData) {
           if (!cancelled) setLoading(false);
           return;
         }
         const sport = roomData.sport || 'football';
 
-        const [fixtureData, roomPredData] = await Promise.all([
-          getTournamentMatches(sport),
-          getRoomPredictions(roomId, sport),
-        ]);
+        if (sport === 'cricket') {
+          if (!cancelled && firstLoad) {
+            setRoom(roomData);
+            setMembers(roomData.members || []);
+            setFixtures([]);
+            setAllFixtures([]);
+            setAllRoomPredictions([]);
+            setRoomPredictions({});
+            setLeaderboard([]);
+          }
+          return;
+        }
 
-        const predData = (roomPredData || []).filter(p => p.userId === user.uid);
-        const memberData = roomData.members || [];
-        const lbData = await getRoomLeaderboard(roomId, sport, roomData, roomPredData);
+        const promises = [getTournamentMatches('football')];
+        if (!cachedRoomPredData) {
+          promises.push(getRoomPredictions(roomId, 'football'));
+        }
+
+        const results = await Promise.all(promises);
+        const fixtureData = results[0];
+        
+        if (results[1]) {
+          cachedRoomPredData = results[1];
+        }
+        const roomPredData = cachedRoomPredData;
+
+        const lbData = await getRoomLeaderboard(roomId, 'football', roomData, roomPredData);
 
         if (cancelled) return;
 
-        setRoom(roomData);
-        setCompetitionFilter(sport === 'cricket' ? 'india' : 'All');
         setLeaderboard(lbData || []);
-        setMembers(memberData || []);
-        setAllRoomPredictions(roomPredData || []);
 
-        const predMap = {};
-        (predData || []).forEach((p) => {
-          predMap[p.fixtureId] = {
-            winner: p.prediction,
-            homeGoals: p.predictedHomeGoals ?? 0,
-            awayGoals: p.predictedAwayGoals ?? 0,
-            extraTimeWinner: p.extraTimeWinner || null,
-          };
-        });
-        setPredictions((prev) => ({ ...predMap, ...prev }));
+        if (firstLoad) {
+          const predData = (roomPredData || []).filter(p => p.userId === user.uid);
+          const memberData = roomData.members || [];
+          
+          setRoom(roomData);
+          setCompetitionFilter('All');
+          setMembers(memberData || []);
+          setAllRoomPredictions(roomPredData || []);
 
-        const memberNameById = {};
-        (memberData || []).forEach((member) => {
-          memberNameById[member.uid] = member.displayName || member.name || 'Player';
-        });
-
-        const roomPredMap = {};
-        (roomPredData || []).forEach((prediction) => {
-          const fixtureKey = String(prediction.fixtureId);
-
-          if (!roomPredMap[fixtureKey]) {
-            roomPredMap[fixtureKey] = [];
-          }
-
-          roomPredMap[fixtureKey].push({
-            userId: prediction.userId,
-            displayName: memberNameById[prediction.userId] || 'Player',
-            winner: prediction.prediction,
-            homeGoals: prediction.predictedHomeGoals ?? 0,
-            awayGoals: prediction.predictedAwayGoals ?? 0,
-            extraTimeWinner: prediction.extraTimeWinner || null,
+          const predMap = {};
+          (predData || []).forEach((p) => {
+            predMap[p.fixtureId] = {
+              winner: p.prediction,
+              homeGoals: p.predictedHomeGoals ?? 0,
+              awayGoals: p.predictedAwayGoals ?? 0,
+              extraTimeWinner: p.extraTimeWinner || null,
+            };
           });
-        });
-        setRoomPredictions(roomPredMap);
+          setPredictions((prev) => ({ ...predMap, ...prev }));
+
+          const memberNameById = {};
+          (memberData || []).forEach((member) => {
+            memberNameById[member.uid] = member.displayName || member.name || 'Player';
+          });
+
+          const roomPredMap = {};
+          (roomPredData || []).forEach((prediction) => {
+            const fixtureKey = String(prediction.fixtureId);
+
+            if (!roomPredMap[fixtureKey]) {
+              roomPredMap[fixtureKey] = [];
+            }
+
+            roomPredMap[fixtureKey].push({
+              userId: prediction.userId,
+              displayName: memberNameById[prediction.userId] || 'Player',
+              winner: prediction.prediction,
+              homeGoals: prediction.predictedHomeGoals ?? 0,
+              awayGoals: prediction.predictedAwayGoals ?? 0,
+              extraTimeWinner: prediction.extraTimeWinner || null,
+            });
+          });
+          setRoomPredictions(roomPredMap);
+        }
 
         const now = new Date();
         const predictionCutoff = new Date(
-          now.getTime() + (sport === "cricket" ? 8 * 24 * 60 * 60 * 1000 : 34 * 60 * 60 * 1000)
+          now.getTime() + 34 * 60 * 60 * 1000
         );
         const matches = (fixtureData || []).slice().sort(
           (a, b) => new Date(a.fixture?.date) - new Date(b.fixture?.date)
@@ -303,10 +334,7 @@ const handlePredict = useCallback(
 
   const sport = room?.sport || 'football';
   const isCricketRoom = sport === 'cricket';
-  const displayedFixtures = useMemo(
-    () => (isCricketRoom ? filterCricketFixtures(fixtures, competitionFilter) : fixtures),
-    [competitionFilter, fixtures, isCricketRoom]
-  );
+  const displayedFixtures = useMemo(() => fixtures, [fixtures]);
 
   // ── Hero fixture = live first, then next upcoming ──
   const heroFixture = liveMatch || nextMatch;
@@ -320,6 +348,21 @@ const handlePredict = useCallback(
   // ── Loading skeletons ────────────────────────────────
   if (loading) return <RoomSkeleton />;
 
+  if (room?.sport === 'cricket') {
+    return (
+      <div className="room-root">
+        <div className="room-content">
+          <div className="empty-state animate-fade-up">
+            <div className="empty-state__icon">⚽</div>
+            <div className="empty-state__title">Cricket rooms have been removed</div>
+            <div className="empty-state__subtitle">Football Talks is now football-only. Create or join a football room to keep predicting.</div>
+            <button className="btn btn-primary" type="button" onClick={() => navigate('/')}>Back to rooms</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="room-root">
       {/* ── Hero ── */}
@@ -331,6 +374,8 @@ const handlePredict = useCallback(
         onOpenRoomInfo={() => setInfoOpen(true)}
         sport={sport}
         userId={user?.uid}
+        tournamentComplete
+        leaderboardChampion={leaderboard[0] || null}
       />
 
       <RoomInfoSheet
@@ -361,18 +406,11 @@ const handlePredict = useCallback(
 
         {tab === 'Predict' && (
           <div className="animate-fade-up">
+            <TournamentCelebration champion={leaderboard[0] || null} />
             {liveMatch && (
               <div className="room-live-strip">Live now: {liveMatch.teams?.home?.name} vs {liveMatch.teams?.away?.name}</div>
             )}
             <ProgressCard completed={predCount} total={totalFixtures} />
-
-            {isCricketRoom && fixtures.length > 0 && (
-              <CricketFilterBar
-                fixtures={fixtures}
-                selectedFilter={competitionFilter}
-                onChange={setCompetitionFilter}
-              />
-            )}
 
             {displayedFixtures.length === 0 ? (
               <div className="empty-state">
@@ -424,9 +462,8 @@ const handlePredict = useCallback(
             predictions={predictions}
             sport={sport}
             fixtures={allFixtures}
-            selectedFilter={competitionFilter}
-            onFilterChange={setCompetitionFilter}
             roomPredictions={allRoomPredictions}
+            members={members}
           />
         )}
 
@@ -497,6 +534,7 @@ function FullLeaderboard({ entries, currentUserId }) {
 
   return (
     <div className="leaderboard-dashboard animate-fade-up">
+      <TournamentCelebration champion={currentLeader} compact />
       <div className="leaderboard-heading">
         <div>
           <p className="section-label">Standings</p>
@@ -795,68 +833,39 @@ const TeamLogo = ({ name, shortName, size = 24 }) => {
 };
 
 /* ─── Recent Results Tab ─────────────────────────────────────────── */
-function RecentResults({ roomId, currentUserId, predictions, sport, selectedFilter, onFilterChange }) {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getRecentResults(sport)
-      .then(r => setResults(r || []))
-      .finally(() => setLoading(false));
-  }, [roomId, sport]);
-
-  if (loading) return <ResultsSkeleton />;
-
-  const isCricket = sport === 'cricket';
-
-  // Flat list: only finished matches (FT, AET, PEN), sorted newest first
+function RecentResults({ roomId, currentUserId, predictions, sport, fixtures = [], roomPredictions = [], members = [] }) {
   const FINISHED_STATUSES = new Set(['FT', 'AET', 'PEN', 'Complete']);
-  let finished = results
+  const finished = (fixtures || [])
     .filter(f => FINISHED_STATUSES.has(f.fixture?.status?.short))
     .slice()
     .sort((a, b) => new Date(b.fixture?.date) - new Date(a.fixture?.date));
 
-  // Apply cricket filters on results
-  if (isCricket) {
-    finished = filterCricketFixtures(finished, selectedFilter);
-  }
-
   return (
     <div className="results-flat animate-fade-up">
-      {isCricket && results.length > 0 && (
-        <CricketFilterBar
-          fixtures={results.filter(f => FINISHED_STATUSES.has(f.fixture?.status?.short))}
-          selectedFilter={selectedFilter}
-          onChange={onFilterChange}
-        />
-      )}
-
       {finished.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon">📊</div>
           <div className="empty-state__title">No results found</div>
-          <div className="empty-state__subtitle">Check another filter or come back soon.</div>
+          <div className="empty-state__subtitle">Finished football matches will appear here.</div>
         </div>
       ) : (
         finished.map(fixture => {
-          const fid        = fixture.fixture?.id;
+          const fid = fixture.fixture?.id;
           const scoreBreakdown = getFixtureScoreBreakdown(fixture);
-          const homeGoals  = scoreBreakdown.ft.home;
-          const awayGoals  = scoreBreakdown.ft.away;
-          const outcome    = scoreBreakdown.winner;
-          
-          // Use shortName/TLA or truncated name to prevent UI overflow
-          const homeName   = fixture.teams?.home?.shortName || fixture.teams?.home?.tla || fixture.teams?.home?.name;
-          const awayName   = fixture.teams?.away?.shortName || fixture.teams?.away?.tla || fixture.teams?.away?.name;
-          const homeSName  = fixture.teams?.home?.shortName;
-          const awaySName  = fixture.teams?.away?.shortName;
-          
+          const homeGoals = scoreBreakdown.ft.home;
+          const awayGoals = scoreBreakdown.ft.away;
+          const outcome = scoreBreakdown.winner;
+          const homeName = fixture.teams?.home?.shortName || fixture.teams?.home?.tla || fixture.teams?.home?.name;
+          const awayName = fixture.teams?.away?.shortName || fixture.teams?.away?.tla || fixture.teams?.away?.name;
           const myPred = predictions[String(fid)];
-          const hasVoted = myPred?.winner === 'home' || myPred?.winner === 'away' || myPred?.winner === 'draw';
-          const winnerCorrect = hasVoted && myPred?.winner === outcome;
-          const displayHomeScore = isCricket ? (fixture.scoreDisplay?.homeScore || '—') : homeGoals;
-          const displayAwayScore = isCricket ? (fixture.scoreDisplay?.awayScore || '—') : awayGoals;
-          const scoreCorrect = !isCricket && winnerCorrect &&
+          
+          const predictedWinner = (myPred?.winner === 'draw' && myPred?.extraTimeWinner && myPred?.extraTimeWinner !== 'draw')
+            ? myPred.extraTimeWinner
+            : myPred?.winner;
+
+          const hasVoted = predictedWinner === 'home' || predictedWinner === 'away' || predictedWinner === 'draw';
+          const winnerCorrect = hasVoted && predictedWinner === outcome;
+          const scoreCorrect = winnerCorrect &&
             Number(myPred?.homeGoals) === homeGoals &&
             Number(myPred?.awayGoals) === awayGoals;
           const earnedPoints = winnerCorrect ? (scoreCorrect ? 1.5 : 1) : 0;
@@ -867,91 +876,124 @@ function RecentResults({ roomId, currentUserId, predictions, sport, selectedFilt
             ? new Date(fixture.fixture.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
             : '';
 
-        return (
-          <div key={fid} className={`result-card ${statusClass}`}>
-            <div className="result-comp">{fixture.league?.name}</div>
-            <div className="result-teams">
-              <div className="result-team-block">
-                {isCricket && <TeamLogo name={homeName} shortName={homeSName} />}
-                <span className="result-team truncate">{homeName}</span>
+          return (
+            <div key={fid} className={`result-card ${statusClass}`}>
+              <div className="result-comp">{fixture.league?.name}</div>
+              <div className="result-teams">
+                <div className="result-team-block">
+                  <span className="result-team truncate">{homeName}</span>
+                </div>
+                <span className="result-score">
+                  {homeGoals} - {awayGoals}<small>FT</small>
+                </span>
+                <div className="result-team-block result-team-block--right">
+                  <span className="result-team truncate" style={{ textAlign: 'right' }}>{awayName}</span>
+                </div>
               </div>
-              <span className={`result-score ${isCricket ? 'result-score--cricket' : ''}`}>
-                {isCricket ? (
-                  <div className="cricket-score-display">
-                    <span className="cricket-score-val">{displayHomeScore}</span>
-                    <span className="cricket-score-divider">vs</span>
-                    <span className="cricket-score-val" style={{ textAlign: 'right' }}>{displayAwayScore}</span>
-                  </div>
-                ) : (
-                  <>{homeGoals} – {awayGoals}<small>FT</small></>
-                )}
-              </span>
-              <div className="result-team-block result-team-block--right">
-                {isCricket && <TeamLogo name={awayName} shortName={awaySName} />}
-                <span className="result-team truncate" style={{ textAlign: 'right' }}>{awayName}</span>
-              </div>
-            </div>
 
-            {isCricket ? (
-              fixture.scoreDisplay?.statusLabel && (
+              {(scoreBreakdown.afterEt || scoreBreakdown.pens) && (
                 <div className="result-score-details">
-                  <span className="cricket-status-badge">
-                    {fixture.scoreDisplay.statusLabel}
+                  {scoreBreakdown.afterEt && <span>{scoreBreakdown.afterEt.home} - {scoreBreakdown.afterEt.away} after ET</span>}
+                  {scoreBreakdown.pens && <span>{scoreBreakdown.pens.home} - {scoreBreakdown.pens.away} pens</span>}
+                </div>
+              )}
+
+              <div className="result-vote">
+                {hasVoted ? (
+                  <span className="result-vote-label">
+                    You voted: {predictedWinner === 'home' ? homeName : predictedWinner === 'away' ? awayName : 'Draw'}
                   </span>
-                </div>
-              )
-            ) : (
-              (scoreBreakdown.afterEt || scoreBreakdown.pens) && (
-                <div className="result-score-details">
-                  {scoreBreakdown.afterEt && <span>{scoreBreakdown.afterEt.home} – {scoreBreakdown.afterEt.away} after ET</span>}
-                  {scoreBreakdown.pens && <span>{scoreBreakdown.pens.home} – {scoreBreakdown.pens.away} pens</span>}
-                </div>
-              )
-            )}
-
-            <div className="result-vote">
-              {hasVoted ? (
-                <span className="result-vote-label">
-                  You voted: {myPred?.winner === 'home' ? homeName : myPred?.winner === 'away' ? awayName : 'Draw'}
-                </span>
-              ) : (
-                <span className="result-vote-label result-vote-label--none">You voted: —</span>
-              )}
-            </div>
-
-            {hasVoted && !isCricket && (
-              <div className="result-predicted-score">
-                Predicted Score: {myPred?.homeGoals} – {myPred?.awayGoals}
+                ) : (
+                  <span className="result-vote-label result-vote-label--none">You voted: -</span>
+                )}
               </div>
-            )}
 
-            <div className="result-footer">
-              {!hasVoted ? (
-                <span className="result-badge result-badge--none">⚪ Not Voted</span>
-              ) : winnerCorrect ? (
-                <span className="result-badge result-badge--correct">
-                  ✅ Winner Correct
-                  {scoreCorrect && <div className="result-score-bonus">🎯 Exact Score Bonus</div>}
-                  <span className="result-badge-points">+{earnedPoints} Points</span>
-                </span>
-              ) : (
-                <span className="result-badge result-badge--wrong">
-                  ❌ Wrong
-                  <span className="result-badge-points">0 Points</span>
-                </span>
+              {hasVoted && (
+                <div className="result-predicted-score">
+                  Predicted Score: {myPred?.homeGoals} - {myPred?.awayGoals}
+                  {myPred?.winner === 'draw' && myPred?.extraTimeWinner && myPred?.extraTimeWinner !== 'draw' && (
+                    <span className="result-predicted-et">
+                      {' '}({myPred.extraTimeWinner === 'home' ? homeName : awayName} ET/Pens)
+                    </span>
+                  )}
+                </div>
               )}
-              <span className="result-date">{matchDate}</span>
+
+              <div className="result-footer">
+                {!hasVoted ? (
+                  <span className="result-badge result-badge--none">Not voted</span>
+                ) : winnerCorrect ? (
+                  <span className="result-badge result-badge--correct">
+                    Winner correct
+                    {scoreCorrect && <div className="result-score-bonus">Exact score bonus</div>}
+                    <span className="result-badge-points">+{earnedPoints} Points</span>
+                  </span>
+                ) : (
+                  <span className="result-badge result-badge--wrong">
+                    Wrong
+                    <span className="result-badge-points">0 Points</span>
+                  </span>
+                )}
+                <span className="result-date">{matchDate}</span>
+              </div>
+
+              <MatchDetailsPanel fixture={fixture} compact roomPredictions={roomPredictions} fixtures={fixtures} />
+
+              <MatchReview
+                fixture={fixture}
+                roomId={roomId}
+                currentUserId={currentUserId}
+                sport={sport}
+                roomPredictions={roomPredictions}
+                members={members}
+              />
             </div>
-            <MatchReview
-              fixture={fixture}
-              roomId={roomId}
-              currentUserId={currentUserId}
-              sport={sport}
-            />
-          </div>
-        );
-      }))}
+          );
+        })
+      )}
     </div>
+  );
+}
+
+function TournamentCelebration({ champion, compact = false }) {
+  const confetti = useMemo(
+    () => Array.from({ length: compact ? 18 : 32 }, (_, index) => ({
+      id: index,
+      left: `${(index * 37 + 11) % 100}%`,
+      delay: `${(index % 8) * 90}ms`,
+      duration: `${1050 + (index % 6) * 130}ms`,
+      color: ['#f7c948', '#ef4444', '#f8fafc', '#f59e0b', '#2563eb'][index % 5],
+      rotation: `${(index * 47) % 360}deg`,
+    })),
+    [compact]
+  );
+
+  return (
+    <section className={`tournament-celebration ${compact ? 'tournament-celebration--compact' : ''}`} aria-label="Tournament champions">
+      <div className="tournament-confetti" aria-hidden="true">
+        {confetti.map((piece) => (
+          <i
+            key={piece.id}
+            style={{
+              left: piece.left,
+              animationDelay: piece.delay,
+              animationDuration: piece.duration,
+              backgroundColor: piece.color,
+              '--confetti-rotation': piece.rotation,
+            }}
+          />
+        ))}
+      </div>
+      <div className="tournament-celebration__flag" aria-hidden="true"><span /></div>
+      <div className="tournament-celebration__content">
+        <span className="tournament-celebration__eyebrow">World Cup 2026</span>
+        <strong>Spain are World Cup Champions</strong>
+        <span className="tournament-celebration__leaderboard">
+          {champion ? `Leaderboard Champion: ${champion.displayName || 'Player'} · ${champion.points ?? 0} pts` : 'Leaderboard Champion will be crowned soon'}
+        </span>
+      </div>
+      <span className="tournament-celebration__trophy" aria-hidden="true">🏆</span>
+    </section>
   );
 }
 

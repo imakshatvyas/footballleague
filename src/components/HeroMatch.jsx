@@ -123,7 +123,7 @@ function formatUpdatedAt(updatedAt) {
   });
 }
 
-export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo, sport = "football", userId }) {
+export default function HeroMatch({ fixture, roomName, memberCount, userPrediction, onOpenRoomInfo, sport = "football", userId, tournamentComplete = false, leaderboardChampion = null }) {
   const statusInfo = fixture ? getStatusInfo(fixture) : null;
   const countdown = useCountdown(statusInfo?.kickoff);
 
@@ -215,7 +215,17 @@ export default function HeroMatch({ fixture, roomName, memberCount, userPredicti
         </div>
       </div>
 
-      {fixture ? (
+      {tournamentComplete ? (
+        <div className="hero-champions" aria-label="World Cup champions">
+          <div className="hero-champions__flag" aria-hidden="true"><span /></div>
+          <span className="hero-champions__eyebrow">World Cup 2026</span>
+          <strong>Spain</strong>
+          <span className="hero-champions__title">World Cup Champions</span>
+          <span className="hero-champions__leaderboard">
+            {leaderboardChampion ? `Leaderboard Champion: ${leaderboardChampion.displayName || 'Player'}` : 'Final leaderboard updating'}
+          </span>
+        </div>
+      ) : fixture ? (
         <>
           <div className="hero-match">
             <div className="hero-team">

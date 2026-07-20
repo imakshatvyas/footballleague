@@ -1,5 +1,5 @@
 import { PushNotifications } from "@capacitor/push-notifications";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export async function initPushNotifications(userId) {

@@ -159,7 +159,8 @@ const scoreFootballPrediction = (prediction, match) => {
   const status = match?.fixture?.status?.short;
   const score = getActualScore(match);
 
-  if (status !== 'FT' || !score) {
+  const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "FINISHED"]);
+  if (!FINISHED_STATUS_CODES.has(status) || !score) {
     return {
       isFinished: false,
       correctWinner: false,
@@ -171,16 +172,12 @@ const scoreFootballPrediction = (prediction, match) => {
   }
 
   const actualWinner = getPredictionWinner(match, score);
-  const predictedWinner = prediction.prediction;
+  
+  const effectivePredictedWinner = (prediction.prediction === "draw" && prediction.extraTimeWinner && prediction.extraTimeWinner !== "draw")
+    ? prediction.extraTimeWinner
+    : prediction.prediction;
 
-  let correctWinner = false;
-  if (predictedWinner === "draw" && actualWinner === "draw") {
-    // Determine the final knockout winner if any
-    const decisiveWinner = getPredictionWinner(match, score); // this matches our resolved penalties/ET winner
-    correctWinner = (decisiveWinner === "draw" || prediction.extraTimeWinner === decisiveWinner);
-  } else {
-    correctWinner = predictedWinner === actualWinner;
-  }
+  const correctWinner = effectivePredictedWinner === actualWinner;
 
   const exactScore =
     correctWinner &&
@@ -435,21 +432,6 @@ export const calculateUserStats = async (userId) => {
   };
 
   const achievements = calculateAchievements(stats, userProfile.achievements || []);
-
-  const currentAchievementIds = userProfile.achievements || [];
-  const achievementsChanged =
-    achievements.unlockedIds.length !== currentAchievementIds.length ||
-    achievements.unlockedIds.some((achievementId) => !currentAchievementIds.includes(achievementId));
-
-  if (achievementsChanged) {
-    await setDoc(
-      doc(db, 'users', userId),
-      {
-        achievements: achievements.unlockedIds,
-      },
-      { merge: true }
-    );
-  }
 
   return {
     profile: userProfile,

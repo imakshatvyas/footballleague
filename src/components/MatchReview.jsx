@@ -18,7 +18,7 @@ const getStatusIcon = (prediction, hasExactScore) => {
   return 'NO';
 };
 
-export default function MatchReview({ fixture, roomId, currentUserId, sport = 'football' }) {
+export default function MatchReview({ fixture, roomId, currentUserId, sport = 'football', roomPredictions = null, members = null }) {
   const [expanded, setExpanded] = useState(false);
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ export default function MatchReview({ fixture, roomId, currentUserId, sport = 'f
     const loadReview = async () => {
       setLoading(true);
       try {
-        const data = await getMatchReview({ fixture, roomId, currentUserId, sport });
+        const data = await getMatchReview({ fixture, roomId, currentUserId, sport, roomPredictions, members });
         if (!cancelled) setReview(data);
       } catch (error) {
         console.error('Match review failed:', error);
@@ -45,7 +45,7 @@ export default function MatchReview({ fixture, roomId, currentUserId, sport = 'f
     return () => {
       cancelled = true;
     };
-  }, [expanded, fixture, roomId, currentUserId, sport]);
+  }, [expanded, fixture, roomId, currentUserId, sport, roomPredictions, members]);
 
   return (
     <div className="match-review-wrapper">
@@ -91,12 +91,7 @@ export default function MatchReview({ fixture, roomId, currentUserId, sport = 'f
                   <span>{review.teams.home} Win</span>
                   <b>{review.summary.homePredictions}</b>
                 </div>
-                {sport !== 'cricket' && (
-                  <div className="match-review-summary-row">
-                    <span>Draw</span>
-                    <b>{review.summary.drawPredictions}</b>
-                  </div>
-                )}
+
                 <div className="match-review-summary-row">
                   <span>{review.teams.away} Win</span>
                   <b>{review.summary.awayPredictions}</b>

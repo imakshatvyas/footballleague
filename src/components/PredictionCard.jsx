@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getSportService } from "../services/sports/sportResolver";
+import MatchDetailsPanel from "./MatchDetailsPanel";
 import "./PredictionCard.css";
 
 const LIVE_STATUSES = ["LIVE", "1H", "HT", "2H", "ET", "BT", "P"];
@@ -485,6 +486,7 @@ export default function PredictionCard({
           Prediction closed after kickoff
         </div>
       )}
+      <MatchDetailsPanel fixture={fixture} roomPredictions={roomPredictions} />
 
       <div className="pred-footer">
         <div className="pred-scoring-info">

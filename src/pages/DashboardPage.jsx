@@ -14,8 +14,9 @@ export default function DashboardPage() {
     if (!user) return;
     getUserRooms(user.uid)
       .then(r => {
-        setRooms(r);
-        if (r.length === 1) navigate(`/room/${r[0].id}`, { replace: true });
+        const footballRooms = (r || []).filter(room => (room.sport || 'football') !== 'cricket');
+        setRooms(footballRooms);
+        if (footballRooms.length === 1) navigate(`/room/${footballRooms[0].id}`, { replace: true });
       })
       .finally(() => setLoading(false));
   }, [user, navigate]);
@@ -43,13 +44,11 @@ export default function DashboardPage() {
             style={{ animationDelay: `${i * 60}ms` }}
             onClick={() => navigate(`/room/${room.id}`)}
           >
-            <div className="room-card-icon">{room.sport === 'cricket' ? '🏏' : '⚽'}</div>
+            <div className="room-card-icon">⚽</div>
             <div className="room-card-info">
               <div className="room-card-name">
                 {room.name}
-                <span className={`room-sport-badge room-sport-badge--${room.sport || 'football'}`}>
-                  {room.sport === 'cricket' ? 'Cricket' : 'Football'}
-                </span>
+                <span className="room-sport-badge room-sport-badge--football">Football</span>
               </div>
               <div className="room-card-meta">{room.memberIds?.length || 1} members · Code: {room.code}</div>
             </div>
