@@ -59,6 +59,8 @@ export default function RoomInfoSheet({
   const sheetRef = useRef(null);
   const startYRef = useRef(null);
   const [dragY, setDragY] = useState(0);
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const roomName = getRoomName(room);
   const roomCode = getRoomCode(room);
@@ -128,11 +130,12 @@ export default function RoomInfoSheet({
     setDragY(0);
   };
 
-  const handleLeave = () => {
-    const confirmed = window.confirm("Leave Room?\n\nYou will leave this prediction room.");
-
-    if (confirmed) {
-      onLeaveRoom();
+  const handleLeave = async () => {
+    setLeaving(true);
+    try {
+      await onLeaveRoom();
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -200,9 +203,20 @@ export default function RoomInfoSheet({
           <span>Room Settings</span>
         </div>
 
-        <button className="room-sheet-leave" type="button" onClick={handleLeave}>
-          Leave Room
-        </button>
+        {confirmingLeave ? (
+          <div className="room-sheet-leave-confirm" role="alertdialog" aria-label="Confirm leaving room">
+            <strong>Leave this room?</strong>
+            <p>You will lose access to this room. Your name will remain in its member list as “(Left) Name”.</p>
+            <div>
+              <button type="button" onClick={() => setConfirmingLeave(false)} disabled={leaving}>Cancel</button>
+              <button type="button" onClick={handleLeave} disabled={leaving}>{leaving ? 'Leaving…' : 'Yes, leave room'}</button>
+            </div>
+          </div>
+        ) : (
+          <button className="room-sheet-leave" type="button" onClick={() => setConfirmingLeave(true)}>
+            Leave Room
+          </button>
+        )}
       </section>
     </div>
   );

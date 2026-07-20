@@ -16,7 +16,7 @@ import MatchReview from '../components/MatchReview';
 import MatchDetailsPanel from '../components/MatchDetailsPanel';
 import './RoomPage.css';
 
-const TABS = ['Predict', 'Standings', 'Results', 'Members', 'Chat'];
+const TABS = ['Home', 'Predict', 'Standings', 'Results', 'Members', 'Chat'];
 
 export default function RoomPage() {
   const { roomId } = useParams();
@@ -33,7 +33,7 @@ export default function RoomPage() {
   const [members,     setMembers]     = useState([]);
   const [liveMatch,   setLiveMatch]   = useState(null);
   const [nextMatch,   setNextMatch]   = useState(null);
-  const [tab,         setTab]         = useState('Predict');
+  const [tab,         setTab]         = useState('Home');
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState({});
   const [infoOpen,    setInfoOpen]    = useState(false);
@@ -404,6 +404,8 @@ const handlePredict = useCallback(
 
       {/* ── Tab content ── */}
       <div className="room-content">
+
+        {tab === 'Home' && <RoomHome onShowPredictions={() => setTab('Predict')} />}
 
         {tab === 'Predict' && (
           <div className="animate-fade-up">
@@ -988,9 +990,7 @@ function TournamentCelebration({ champion, compact = false }) {
           />
         ))}
       </div>
-      <div className="tournament-celebration__flag" aria-hidden="true">
-        <img src="/spain.png" alt="Spain" style={{ width: '48px', height: 'auto', borderRadius: '4px', objectFit: 'cover' }} />
-      </div>
+      <img className="tournament-celebration__flag" src="/spain-flag.svg" alt="Spain flag" />
       <div className="tournament-celebration__content">
         <span className="tournament-celebration__eyebrow">World Cup 2026</span>
         <strong>Spain are World Cup Champions</strong>
@@ -1000,6 +1000,46 @@ function TournamentCelebration({ champion, compact = false }) {
       </div>
       <span className="tournament-celebration__trophy" aria-hidden="true">🏆</span>
     </section>
+  );
+}
+
+function RoomHome({ onShowPredictions }) {
+  const currentYear = new Date().getFullYear();
+  const season = `${currentYear}/${String(currentYear + 1).slice(-2)}`;
+  const events = [
+    { period: 'Aug', title: 'European league kick-off', detail: `Premier League, La Liga, Serie A, Bundesliga and Ligue 1 begin their ${season} campaigns.`, tag: 'Top 5 leagues' },
+    { period: 'Sep', title: 'UEFA league phase', detail: 'Champions League, Europa League and Conference League fixtures return for midweek predictions.', tag: 'UEFA' },
+    { period: 'Jan', title: 'European knockouts', detail: 'The UEFA knockout play-offs set up the decisive rounds across all three competitions.', tag: 'UEFA' },
+    { period: 'Mar', title: 'IPL begins', detail: 'Indian Premier League matchdays arrive, alongside the UEFA round of 16 and quarter-finals.', tag: 'IPL' },
+    { period: 'May', title: 'Finals month', detail: 'Domestic title races conclude, followed by the UEFA finals and the IPL play-offs.', tag: 'Finals' },
+  ];
+
+  return (
+    <div className="room-home animate-fade-up">
+      <section className="room-home__intro">
+        <p className="section-label">Room home</p>
+        <h2>What’s coming up</h2>
+        <p>Follow the next major football and cricket events, then make predictions when fixtures open.</p>
+        <button className="btn btn-primary" type="button" onClick={onShowPredictions}>View predictions</button>
+      </section>
+      <section className="room-home__timeline" aria-label="Upcoming events timeline">
+        <div className="room-home__timeline-heading">
+          <h3>Upcoming events</h3>
+          <span>Season roadmap</span>
+        </div>
+        {events.map((event) => (
+          <article className="event-timeline-item" key={event.title}>
+            <div className="event-timeline-item__period">{event.period}</div>
+            <div className="event-timeline-item__line" aria-hidden="true" />
+            <div className="event-timeline-item__body">
+              <span>{event.tag}</span>
+              <h4>{event.title}</h4>
+              <p>{event.detail}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+    </div>
   );
 }
 

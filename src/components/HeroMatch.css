@@ -363,25 +363,11 @@
   text-align: center;
 }
 
-.hero-champions__flag,
-.tournament-celebration__flag {
+.hero-champions__flag {
   width: 58px;
   height: 39px;
-  overflow: hidden;
   border-radius: 5px;
-  background: linear-gradient(#aa151b 0 25%, #f1bf00 25% 75%, #aa151b 75%);
   box-shadow: 0 7px 22px rgba(0, 0, 0, 0.35);
-}
-
-.hero-champions__flag span,
-.tournament-celebration__flag span {
-  display: block;
-  width: 9px;
-  height: 15px;
-  margin: 12px 0 0 13px;
-  border: 2px solid #aa151b;
-  border-radius: 2px;
-  background: #f1bf00;
 }
 
 .hero-champions__eyebrow {
@@ -658,4 +644,3 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(245, 124, 0, 0.4);
 }
-
