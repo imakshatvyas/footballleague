@@ -988,7 +988,9 @@ function TournamentCelebration({ champion, compact = false }) {
           />
         ))}
       </div>
-      <div className="tournament-celebration__flag" aria-hidden="true"><span /></div>
+      <div className="tournament-celebration__flag" aria-hidden="true">
+        <img src="/spain.png" alt="Spain" style={{ width: '48px', height: 'auto', borderRadius: '4px', objectFit: 'cover' }} />
+      </div>
       <div className="tournament-celebration__content">
         <span className="tournament-celebration__eyebrow">World Cup 2026</span>
         <strong>Spain are World Cup Champions</strong>
